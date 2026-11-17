@@ -1,0 +1,34 @@
+{
+  "Random Forest": {
+    "accuracy": 0.8206521739130435,
+    "recall": 0.8627450980392157,
+    "precision": 0.822429906542056,
+    "f1": 0.8421052631578947,
+    "train_seconds": 0.1008150577545166
+  },
+  "Quantum kernel SVM": {
+    "accuracy": 0.5760869565217391,
+    "recall": 0.5490196078431373,
+    "precision": 0.6363636363636364,
+    "f1": 0.5894736842105263,
+    "train_seconds": 25.8752019405365
+  },
+  "features": [
+    "age",
+    "sex",
+    "cp",
+    "trestbps",
+    "chol",
+    "fbs",
+    "restecg",
+    "thalach",
+    "exang",
+    "oldpeak",
+    "slope",
+    "ca",
+    "thal"
+  ],
+  "n_train_classical": 734,
+  "n_train_quantum": 200,
+  "n_test": 184
+}
