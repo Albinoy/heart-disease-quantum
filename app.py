@@ -3,6 +3,7 @@
 Run:  streamlit run app.py   (after running train.py once)
 """
 import json
+import os
 
 import joblib
 import matplotlib.pyplot as plt
@@ -35,8 +36,8 @@ st.warning(
     "If you are worried about your health, speak to a doctor or NHS 111."
 )
 
-tab_predict, tab_compare, tab_circuit, tab_about = st.tabs(
-    ["Predict", "Model comparison", "Quantum circuit", "About"]
+tab_predict, tab_compare, tab_bench, tab_circuit, tab_about = st.tabs(
+    ["Predict", "Model comparison", "Benchmark", "Quantum circuit", "About"]
 )
 
 # ---------------- Inputs ----------------
@@ -82,7 +83,7 @@ with tab_predict:
     else:
         rf_prob = float(rf.predict_proba(row)[0][1])
 
-        x_q = q["prep"].transform(row)
+        x_q = q["prep"].transform(row) * q["angle_scale"] * np.pi
         k_row = kernel.evaluate(x_vec=x_q, y_vec=q["Xq_train"])
         q_prob = float(q["svc"].predict_proba(k_row)[0][1])
 
@@ -112,11 +113,43 @@ with tab_compare:
     st.dataframe(table.style.format("{:.3f}"))
     st.caption(
         f"Test patients: {metrics['n_test']}. Classical training rows: {metrics['n_train_classical']}. "
-        f"Quantum training rows: {metrics['n_train_quantum']} (capped because kernel cost grows with n²)."
+        f"Quantum training rows: {metrics['n_train_quantum']} (capped because kernel cost grows with n²). "
+        f"Quantum angle scale: {metrics['angle_scale']}π, SVM C: {metrics['svm_C']} (chosen by cross-validation on training rows)."
     )
     st.write(
         "**Recall** matters most here: it measures how many truly sick patients the model catches. "
         "Training time for the quantum model is for a classical *simulator* of the circuit."
+    )
+
+# ---------------- Benchmark ----------------
+with tab_bench:
+    st.subheader("Cross-validated benchmark")
+    if os.path.exists("results/cv_summary.csv"):
+        s = pd.read_csv("results/cv_summary.csv", header=[0, 1], index_col=0).dropna(how="all")
+        tbl = pd.DataFrame({
+            m: s[m]["mean"].map("{:.3f}".format) + " ± " + s[m]["std"].map("{:.3f}".format)
+            for m in ["accuracy", "recall", "roc_auc"]
+        })
+        tbl["fit time (s)"] = s["seconds"]["mean"].map("{:.3f}".format)
+        st.table(tbl)
+        st.caption("Mean ± standard deviation over repeated cross-validation folds. "
+                   "Tuned models chose their settings using training rows only.")
+    for path, caption in [
+        ("results/cv_comparison.png", "Cross-validated comparison"),
+        ("results/roc_curves.png", "ROC curves on one held-out split"),
+        ("results/exp_angle_scale.png", "Quantum model: effect of angle scale"),
+        ("results/exp_qubits_time.png", "Simulation time grows exponentially with qubits"),
+    ]:
+        if os.path.exists(path):
+            st.image(path, caption=caption)
+    st.markdown(
+        """
+**Findings**
+- With default settings, the quantum kernel SVM performed far worse than the classical models.
+- After tuning its angle scale and C, it matched the tuned RBF-SVM within the noise of the cross-validation, but did not beat it.
+- Simulating the quantum kernel is orders of magnitude slower, and the cost grows exponentially with the number of qubits.
+- On this small tabular dataset there is no evidence of a quantum advantage.
+        """
     )
 
 # ---------------- Circuit ----------------

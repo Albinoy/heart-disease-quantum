@@ -1,22 +1,27 @@
 """Fair benchmark of classical vs quantum models on the heart disease data.
 
 Usage:
-    python benchmark.py            # full run (can take 15-40 minutes on a laptop)
+    python benchmark.py            # full run (can take 45-90 minutes on a laptop)
     python benchmark.py --quick    # small, fast run to check everything works
 
 Outputs go in the results/ folder (CSV tables and PNG charts).
 
-Part A: repeated cross-validation of four models, all given the SAME 4 PCA
-        features and the SAME training rows (except the first RF baseline):
-          1. Random Forest, 13 features, all rows   (strong classical baseline)
+Part A: repeated cross-validation of six models. Everything except the first
+        model gets the SAME 4 PCA features and the SAME training rows:
+          1. Random Forest, 13 features, all rows
           2. Random Forest, 4 PCA features
-          3. RBF-kernel SVM, 4 PCA features         (classical kernel)
-          4. Quantum kernel SVM, 4 qubits           (quantum kernel)
-        Comparing 3 vs 4 isolates the one thing being tested: classical kernel
-        vs quantum kernel, with everything else held equal.
-Part B: ROC curves on one held-out split.
-Part C: quantum experiments (feature map, qubits, training size, angle scaling,
-        SVM C) on one held-out split.
+          3. RBF-SVM, default settings
+          4. RBF-SVM, tuned (C and gamma, chosen by inner CV on training rows)
+          5. Quantum kernel SVM, default settings (angle scale = pi, C = 1)
+          6. Quantum kernel SVM, tuned (angle scale and C, chosen by inner CV
+             on training rows only)
+        Compare 4 vs 6 for the fairest classical-vs-quantum test: both get a
+        similar tuning budget, and neither sees the test fold while tuning.
+Part B: ROC curves on one held-out test split (tuning still uses training
+        rows only).
+Part C: quantum experiments (angle scale, feature map, qubits, training size,
+        SVM C). These are scored on a VALIDATION split carved out of the
+        training data, so the test set is never used to pick settings.
 """
 import os
 import sys
@@ -33,7 +38,12 @@ from qiskit_machine_learning.kernels import FidelityQuantumKernel
 from sklearn.decomposition import PCA
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, recall_score, roc_auc_score, roc_curve
-from sklearn.model_selection import RepeatedStratifiedKFold, train_test_split
+from sklearn.model_selection import (
+    GridSearchCV,
+    RepeatedStratifiedKFold,
+    StratifiedKFold,
+    train_test_split,
+)
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from sklearn.svm import SVC
@@ -49,12 +59,16 @@ N_SPLITS = 3 if QUICK else 5
 N_REPEATS = 1 if QUICK else 2
 TRAIN_SIZES = [20, 40, 60] if QUICK else [40, 80, 120, 200]
 QUBIT_COUNTS = [2, 4] if QUICK else [2, 4, 6, 8]
+SCALES = [0.1, 0.5] if QUICK else [0.05, 0.1, 0.25, 0.5, 1.0]   # multiples of pi
+C_GRID = [0.1, 1.0, 10.0]
 
 M_RF = "RF (13 feat, all rows)"
 M_RF4 = "RF (4 PCA feat)"
-M_SVM = "RBF-SVM (4 PCA feat)"
-M_Q = "Quantum kernel SVM"
-MODEL_ORDER = [M_RF, M_RF4, M_SVM, M_Q]
+M_SVM = "RBF-SVM (default)"
+M_SVMT = "RBF-SVM (tuned)"
+M_Q = "Quantum SVM (default)"
+M_QT = "Quantum SVM (tuned)"
+MODEL_ORDER = [M_RF, M_RF4, M_SVM, M_SVMT, M_Q, M_QT]
 
 os.makedirs("results", exist_ok=True)
 
@@ -74,6 +88,13 @@ def make_prep(n_components, scale=1.0):
     ])
 
 
+def make_fm(nq, kind="zz", reps=2):
+    if kind == "zz":
+        return ZZFeatureMap(nq, reps=reps)
+    # A genuinely different map (ZZFeatureMap is already the Z,ZZ Pauli map)
+    return PauliFeatureMap(nq, reps=reps, paulis=["Y", "ZZ"])
+
+
 def subsample(Xa, ya, n, seed):
     if len(Xa) <= n:
         return Xa, ya
@@ -90,7 +111,7 @@ def metrics(y_true, y_pred, score):
 
 
 def fit_quantum(A, ya, B, feature_map, C=1.0):
-    """Quantum kernel SVM. Returns (scores, predictions, seconds)."""
+    """Quantum kernel SVM with fixed settings. Returns (scores, preds, seconds)."""
     t0 = time.time()
     kernel = FidelityQuantumKernel(feature_map=feature_map)
     K_train = kernel.evaluate(x_vec=A)
@@ -99,8 +120,38 @@ def fit_quantum(A, ya, B, feature_map, C=1.0):
     return svc.decision_function(K_test), svc.predict(K_test), time.time() - t0
 
 
+def fit_quantum_tuned(A1, ya, B1, seed, nq=N_QUBITS):
+    """Choose angle scale and C by 3-fold CV on the TRAINING rows only.
+
+    A1, B1 are features scaled to [0, 1]; the angle scale multiplies them by
+    scale*pi. The kernel is computed once per scale, and the inner CV just
+    slices that matrix, so tuning C is free.
+    Returns (scores, preds, seconds, best_scale, best_C).
+    """
+    t0 = time.time()
+    kernel = FidelityQuantumKernel(feature_map=make_fm(nq))
+    inner = StratifiedKFold(n_splits=3, shuffle=True, random_state=seed)
+    kernels, best = {}, None
+    for scale in SCALES:
+        K = kernel.evaluate(x_vec=A1 * scale * np.pi)
+        kernels[scale] = K
+        for C in C_GRID:
+            aucs = []
+            for tr, va in inner.split(A1, ya):
+                svc = SVC(kernel="precomputed", C=C, class_weight="balanced")
+                svc.fit(K[np.ix_(tr, tr)], ya[tr])
+                aucs.append(roc_auc_score(ya[va], svc.decision_function(K[np.ix_(va, tr)])))
+            m = float(np.mean(aucs))
+            if best is None or m > best[0]:
+                best = (m, scale, C)
+    _, scale, C = best
+    svc = SVC(kernel="precomputed", C=C, class_weight="balanced").fit(kernels[scale], ya)
+    K_test = kernel.evaluate(x_vec=B1 * scale * np.pi, y_vec=A1 * scale * np.pi)
+    return svc.decision_function(K_test), svc.predict(K_test), time.time() - t0, scale, C
+
+
 def run_models(Xtr, ytr, Xte, yte, seed):
-    """Train and score all four models on one split."""
+    """Train and score all six models on one split. Tuning never sees Xte."""
     out, scores = {}, {}
 
     t0 = time.time()
@@ -112,8 +163,9 @@ def run_models(Xtr, ytr, Xte, yte, seed):
 
     # Everything below shares the same rows and the same 4 features.
     Xs, ys = subsample(Xtr, ytr, N_Q, seed)
-    prep = make_prep(N_QUBITS)
-    A, B = prep.fit_transform(Xs), prep.transform(Xte)
+    prep = make_prep(N_QUBITS, scale=1 / np.pi)      # features in [0, 1]
+    A1, B1 = prep.fit_transform(Xs), prep.transform(Xte)
+    A, B = A1 * np.pi, B1 * np.pi                    # angles in [0, pi]
 
     t0 = time.time()
     rf4 = RandomForestClassifier(n_estimators=200, class_weight="balanced", random_state=seed)
@@ -128,9 +180,24 @@ def run_models(Xtr, ytr, Xte, yte, seed):
     out[M_SVM] = {**metrics(yte, svm.predict(B), s), "seconds": time.time() - t0}
     scores[M_SVM] = s
 
-    s, p, secs = fit_quantum(A, ys, B, ZZFeatureMap(N_QUBITS, reps=2))
+    t0 = time.time()
+    grid = GridSearchCV(
+        SVC(kernel="rbf", class_weight="balanced", random_state=seed),
+        {"C": C_GRID, "gamma": ["scale", 0.03, 0.1, 0.3, 1.0]},
+        cv=3, scoring="roc_auc",
+    ).fit(A, ys)
+    s = grid.decision_function(B)
+    out[M_SVMT] = {**metrics(yte, grid.predict(B), s), "seconds": time.time() - t0}
+    scores[M_SVMT] = s
+
+    s, p, secs = fit_quantum(A, ys, B, make_fm(N_QUBITS))
     out[M_Q] = {**metrics(yte, p, s), "seconds": secs}
     scores[M_Q] = s
+
+    s, p, secs, best_scale, best_C = fit_quantum_tuned(A1, ys, B1, seed)
+    out[M_QT] = {**metrics(yte, p, s), "seconds": secs,
+                 "best_scale": best_scale, "best_C": best_C}
+    scores[M_QT] = s
     return out, scores
 
 
@@ -151,72 +218,82 @@ summary = summary.reindex(MODEL_ORDER)
 summary.to_csv("results/cv_summary.csv")
 print("\n" + summary.round(3).to_string(), flush=True)
 
-fig, axes = plt.subplots(1, 3, figsize=(14, 4.5), sharey=True)
+chosen = cv_df[cv_df["model"] == M_QT][["best_scale", "best_C"]]
+print("\nScale chosen by tuning (multiples of pi):", dict(chosen["best_scale"].value_counts()))
+print("C chosen by tuning:", dict(chosen["best_C"].value_counts()), flush=True)
+
+fig, axes = plt.subplots(1, 3, figsize=(17, 5), sharey=True)
 for ax, m in zip(axes, ["accuracy", "recall", "roc_auc"]):
     means, stds = summary[m]["mean"], summary[m]["std"]
     ax.bar(range(len(means)), means.values, yerr=stds.values, capsize=4)
     ax.set_xticks(range(len(means)))
-    ax.set_xticklabels(means.index, rotation=30, ha="right")
-    ax.set_title(f"{m} (mean ± std over {N_SPLITS * N_REPEATS} folds)")
+    ax.set_xticklabels(means.index, rotation=35, ha="right")
+    ax.set_title(f"{m} (mean ± std, {N_SPLITS * N_REPEATS} folds)")
     ax.set_ylim(0, 1)
 plt.tight_layout()
 plt.savefig("results/cv_comparison.png", dpi=150)
 plt.close()
 
-# ---------------- Part B: ROC curves on one split ----------------
+# ---------------- Part B: ROC curves on one test split ----------------
 print("\n== Part B: ROC curves ==", flush=True)
 Xtr, Xte, ytr, yte = train_test_split(X, y, test_size=0.2, random_state=SEED, stratify=y)
 _, scores = run_models(Xtr, ytr, Xte, yte, seed=SEED)
-plt.figure(figsize=(6, 5))
+plt.figure(figsize=(6.5, 5.5))
 for name in MODEL_ORDER:
     fpr, tpr, _ = roc_curve(yte, scores[name])
     plt.plot(fpr, tpr, label=f"{name} (AUC {roc_auc_score(yte, scores[name]):.2f})")
 plt.plot([0, 1], [0, 1], "k--", alpha=0.4)
 plt.xlabel("False positive rate")
 plt.ylabel("True positive rate (recall)")
-plt.title("ROC curves (single held-out split)")
-plt.legend(fontsize=8)
+plt.title("ROC curves (single held-out test split)")
+plt.legend(fontsize=7)
 plt.tight_layout()
 plt.savefig("results/roc_curves.png", dpi=150)
 plt.close()
 
-
-# ---------------- Part C: quantum experiments ----------------
-print("\n== Part C: quantum experiments (single split) ==", flush=True)
+# ---------------- Part C: quantum experiments (validation split) ----------------
+print("\n== Part C: quantum experiments (validation split, test set untouched) ==", flush=True)
+Xfit, Xval, yfit, yval = train_test_split(
+    Xtr, ytr, test_size=0.25, random_state=SEED, stratify=ytr
+)
 
 
 def quantum_run(nq=N_QUBITS, n=N_Q, scale=1.0, C=1.0, fmap="zz", reps=2):
-    Xs, ys = subsample(Xtr, ytr, n, SEED)
+    Xs, ys = subsample(Xfit, yfit, n, SEED)
     prep = make_prep(nq, scale)
-    A, B = prep.fit_transform(Xs), prep.transform(Xte)
-    if fmap == "zz":
-        fm = ZZFeatureMap(nq, reps=reps)
-    else:
-        fm = PauliFeatureMap(nq, reps=reps, paulis=["Z", "ZZ"])
-    s, p, secs = fit_quantum(A, ys, B, fm, C)
-    return {**metrics(yte, p, s), "seconds": secs}
+    A, B = prep.fit_transform(Xs), prep.transform(Xval)
+    s, p, secs = fit_quantum(A, ys, B, make_fm(nq, fmap, reps), C)
+    return {**metrics(yval, p, s), "seconds": secs}
 
 
-experiments = []
-for reps in (1, 2, 3):
-    experiments.append(("feature_map", f"ZZ reps={reps}", dict(fmap="zz", reps=reps)))
-experiments.append(("feature_map", "Pauli(Z,ZZ) reps=2", dict(fmap="pauli", reps=2)))
-for nq in QUBIT_COUNTS:
-    experiments.append(("qubits", str(nq), dict(nq=nq)))
-for n in TRAIN_SIZES:
-    experiments.append(("train_size", str(n), dict(n=n)))
-for scale in (0.25, 0.5, 1.0, 2.0):
-    experiments.append(("angle_scale", f"{scale}*pi", dict(scale=scale)))
-for C in (0.1, 1.0, 10.0):
-    experiments.append(("svm_C", str(C), dict(C=C)))
+total = (len(SCALES) + 1) + 4 + len(QUBIT_COUNTS) + len(TRAIN_SIZES) + len(C_GRID)
+exp_rows, counter = [], [0]
 
-exp_rows = []
-for k, (group, label, kwargs) in enumerate(experiments):
+
+def run_experiment(group, label, **kwargs):
     r = quantum_run(**kwargs)
     exp_rows.append({"experiment": group, "setting": label, **r})
-    print(f"  [{k + 1}/{len(experiments)}] {group}={label}: "
-          f"acc {r['accuracy']:.3f}, recall {r['recall']:.3f}, "
-          f"auc {r['roc_auc']:.3f}, {r['seconds']:.0f}s", flush=True)
+    counter[0] += 1
+    print(f"  [{counter[0]}/{total}] {group}={label}: acc {r['accuracy']:.3f}, "
+          f"recall {r['recall']:.3f}, auc {r['roc_auc']:.3f}, {r['seconds']:.0f}s", flush=True)
+    return r
+
+
+# Angle scale first; its best value becomes the base setting for the rest, so
+# the other experiments are not confounded by a badly chosen scale.
+scale_results = {s: run_experiment("angle_scale", f"{s}*pi", scale=s) for s in SCALES + [2.0]}
+base_scale = max(scale_results, key=lambda s: scale_results[s]["roc_auc"])
+print(f"  -> base angle scale for remaining experiments: {base_scale}*pi", flush=True)
+
+for reps in (1, 2, 3):
+    run_experiment("feature_map", f"ZZ reps={reps}", scale=base_scale, reps=reps)
+run_experiment("feature_map", "Pauli(Y,ZZ) reps=2", scale=base_scale, fmap="pauli", reps=2)
+for nq in QUBIT_COUNTS:
+    run_experiment("qubits", str(nq), scale=base_scale, nq=nq)
+for n in TRAIN_SIZES:
+    run_experiment("train_size", str(n), scale=base_scale, n=n)
+for C in C_GRID:
+    run_experiment("svm_C", str(C), scale=base_scale, C=C)
 
 exp_df = pd.DataFrame(exp_rows)
 exp_df.to_csv("results/quantum_experiments.csv", index=False)
@@ -225,7 +302,7 @@ for group, sub in exp_df.groupby("experiment", sort=False):
     ax = sub.set_index("setting")[["accuracy", "recall", "roc_auc"]].plot.bar(
         figsize=(6, 4), ylim=(0, 1), rot=20
     )
-    ax.set_title(f"Quantum kernel SVM: effect of {group}")
+    ax.set_title(f"Quantum kernel SVM: effect of {group} (validation)")
     plt.tight_layout()
     plt.savefig(f"results/exp_{group}.png", dpi=150)
     plt.close()
