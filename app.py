@@ -48,6 +48,12 @@ def load_csv(path):
 
 rf, q, kernel, metrics = load_models()
 FEATURES = metrics["features"]
+# data file -> (name in the data section, short name in the score text)
+SOURCE_NAMES = {
+    "uci_heart_disease.csv": ("UCI Heart Disease: Cleveland, Hungary, Switzerland and Long Beach VA", "UCI hospitals"),
+    "z_alizadeh_sani.csv": ("Z-Alizadeh Sani: Rajaie Cardiovascular Center, Tehran, angiography-confirmed",
+                            "Iranian patients"),
+}
 REF = metrics.get("reference", {})
 M_RF, M_Q = metrics["Random Forest"], metrics["Quantum kernel SVM"]
 
@@ -295,6 +301,14 @@ st.markdown(
     "happened to be in the test set, so the cross-validated benchmark below is the fairer comparison.</p>",
     unsafe_allow_html=True)
 
+rf_src, q_src = M_RF.get("by_source", {}), M_Q.get("by_source", {})
+if len(rf_src) > 1:
+    parts = [f"{SOURCE_NAMES.get(s, (s, s))[1]} ({r['n_test']} patients): classical {r['roc_auc']:.2f}, "
+             f"quantum {q_src.get(s, {}).get('roc_auc', float('nan')):.2f}" for s, r in rf_src.items()]
+    st.markdown('<p class="cq-read">ROC AUC by data source. ' + "; ".join(parts) + ". The Iranian "
+                "patients never had an exercise test, so both models see less about them.</p>",
+                unsafe_allow_html=True)
+
 # ------------------------------------------------------------------ benchmark
 cv = load_csv("results/cv_summary.csv")
 exp = load_csv("results/quantum_experiments.csv")
@@ -303,6 +317,10 @@ if cv is not None or exp is not None:
                            "Repeated cross-validation: every model is trained and tested many times on "
                            "different splits, and tuned settings are chosen without looking at the test "
                            "patients. Whiskers show how much the score varied."), unsafe_allow_html=True)
+    if len(metrics.get("data", {}).get("files", {})) > 1:
+        st.markdown('<p class="cq-small">This benchmark was run on the UCI patients only, before the Iranian '
+                    "patients were added, so its numbers differ from the test scores above.</p>",
+                    unsafe_allow_html=True)
 if cv is not None:
     models = list(cv.index)
     labels = [m.replace(" (", "<br>(") for m in models]
@@ -353,7 +371,7 @@ with st.expander("Show the quantum circuit"):
 info = metrics.get("data", {})
 st.markdown(ui.section("Data and limits"), unsafe_allow_html=True)
 if info:
-    files = ", ".join(f"{k} ({v} rows)" for k, v in info.get("files", {}).items())
+    files = ", ".join(f"{SOURCE_NAMES.get(k, (k, k))[0]} ({v} patients)" for k, v in info.get("files", {}).items())
     dropped = info.get("dropped_features", {})
     st.markdown(
         f'<p class="cq-read">Trained on {info.get("rows", "?")} patients from {files}. '
@@ -363,9 +381,11 @@ if info:
         + "</p>", unsafe_allow_html=True)
 st.markdown(
     '<ul class="cq-limits">'
-    "<li>The public datasets are small and were collected decades ago at a handful of hospitals, so the "
-    "models may not reflect your population.</li>"
-    "<li>Missing values were filled with typical values, which hides real uncertainty.</li>"
+    "<li>The public datasets are small: the UCI patients were seen at four hospitals in the 1980s and the "
+    "Iranian patients at one centre in Tehran, so the models may not reflect your population.</li>"
+    "<li>The Iranian patients had no exercise test, and many UCI patients lack some results. The classical "
+    "model handles these gaps itself; the quantum model fills them with typical values, which hides real "
+    "uncertainty.</li>"
     "<li>The quantum model runs on a simulator on an ordinary computer, not on quantum hardware.</li>"
     "<li>Neither model has been clinically validated, and medical software in the UK must be approved "
     "by the MHRA before clinical use.</li></ul>", unsafe_allow_html=True)

@@ -7,6 +7,11 @@
   calibration step fitted on out-of-fold scores (no test data used).
 
 Data: every .csv in data/ (combined, duplicates removed), or heart.csv.
+Missing values (e.g. exercise-test results the Iranian dataset never recorded)
+are left as gaps for the Random Forest, which handles them itself; the quantum
+pipeline fills them with the training median, because PCA cannot use gaps.
+The test split is stratified by data source and outcome, and test scores are
+also reported for each source separately.
 Usage:  python train.py
 """
 import json
@@ -18,6 +23,7 @@ from qiskit.circuit.library import ZZFeatureMap
 from qiskit_machine_learning.kernels import FidelityQuantumKernel
 from sklearn.decomposition import PCA
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (accuracy_score, confusion_matrix, f1_score,
                              precision_score, recall_score, roc_auc_score)
@@ -30,19 +36,30 @@ from data_prep import load_data
 
 SEED = 42
 N_QUBITS = 4
-MAX_TRAIN = 120     # quantum kernel cost grows with n^2 (same as benchmark.py)
+# Quantum kernel cost grows with n^2. 240 rows (up from 120) was needed once the
+# Iranian patients were added: at 120 the test AUC fell to 0.73 (0.59 on Iran).
+MAX_TRAIN = 240
 SCALES = [0.05, 0.1, 0.25, 0.5, 1.0]   # angle scale, multiples of pi
-C_GRID = [0.1, 1.0, 10.0]
+C_GRID = [0.1, 1.0, 10.0, 100.0]
 NUMERIC = ["age", "trestbps", "chol", "thalach", "oldpeak"]
 
-df = load_data(verbose=True)
+df = load_data(verbose=True, with_source=True, fill_missing=False)
 info = df.attrs["info"]
 features = info["features"]
-X, y = df[features], df["target"]
+X, y, source = df[features], df["target"], df["source"]
 
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=SEED, stratify=y
+X_train, X_test, y_train, y_test, src_train, src_test = train_test_split(
+    X, y, source, test_size=0.2, random_state=SEED, stratify=source + "_" + y.astype(str)
 )
+
+
+def by_source(prob):
+    """Test ROC AUC for each data source separately."""
+    out = {}
+    for s in sorted(src_test.unique()):
+        m = (src_test == s).values
+        out[s] = {"n_test": int(m.sum()), "roc_auc": float(roc_auc_score(y_test[m], prob[m]))}
+    return out
 
 
 def report(y_true, prob):
@@ -62,7 +79,8 @@ def report(y_true, prob):
 t0 = time.time()
 rf = RandomForestClassifier(n_estimators=300, class_weight="balanced", random_state=SEED)
 rf.fit(X_train, y_train)
-rf_metrics = {**report(y_test, rf.predict_proba(X_test)[:, 1]), "train_seconds": time.time() - t0}
+rf_prob = rf.predict_proba(X_test)[:, 1]
+rf_metrics = {**report(y_test, rf_prob), "train_seconds": time.time() - t0, "by_source": by_source(rf_prob)}
 print("Classical (Random Forest):", {k: v for k, v in rf_metrics.items() if k != "confusion"})
 
 # ---------- Quantum model (tuned + calibrated) ----------
@@ -75,6 +93,7 @@ else:
 y_q = np.asarray(y_q)
 
 prep = Pipeline([
+    ("fill", SimpleImputer(strategy="median")),
     ("scale", StandardScaler()),
     ("pca", PCA(n_components=N_QUBITS, random_state=SEED)),
     ("unit", MinMaxScaler(feature_range=(0, 1))),
@@ -110,14 +129,14 @@ q_time = time.time() - t0
 
 K_test = kernel.evaluate(x_vec=B1 * best_scale * np.pi, y_vec=Xq_train)
 q_prob = calib.predict_proba(svc.decision_function(K_test).reshape(-1, 1))[:, 1]
-q_metrics = {**report(y_test, q_prob), "train_seconds": q_time}
+q_metrics = {**report(y_test, q_prob), "train_seconds": q_time, "by_source": by_source(q_prob)}
 print("Quantum kernel SVM:", {k: v for k, v in q_metrics.items() if k != "confusion"})
 
 # ---------- Reference values for explaining a single prediction ----------
 train_df = X_train.assign(target=y_train.values)
 reference = {}
 for f in features:
-    col = train_df[f]
+    col = train_df[f].dropna()
     typical = float(col.median()) if f in NUMERIC else float(col.mode().iloc[0])
     entry = {"typical": typical}
     if f in NUMERIC:

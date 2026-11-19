@@ -1,30 +1,48 @@
 # CardiaQ: heart-disease risk, classical vs quantum (Streamlit + Qiskit)
 
 Benchmarks a Random Forest against a quantum-kernel SVM (simulated with Qiskit)
-on the UCI Heart Disease dataset, with a Streamlit app to try both side by side.
+on real-patient heart disease data from five hospitals, with a Streamlit app to
+try both side by side.
 
 > Educational project. Not medical advice. Not clinically validated.
 
+## Data (real patients only)
+| File | Patients | Source | Licence |
+|---|---|---|---|
+| `data/uci_heart_disease.csv` | 920 | UCI Heart Disease: Cleveland Clinic, Hungarian Institute of Cardiology (Budapest), University Hospitals Zurich and Basel, Long Beach VA, 1980s. Janosi, Steinbrunn, Pfisterer, Detrano (1988), [UCI 45](https://archive.ics.uci.edu/dataset/45/heart+disease) | CC BY 4.0 |
+| `data/z_alizadeh_sani.csv` | 303 | Z-Alizadeh Sani: Rajaie Cardiovascular Center, Tehran; CAD confirmed by angiography. Alizadehsani et al., *Computer Methods and Programs in Biomedicine* (2013), [UCI 412](https://archive.ics.uci.edu/dataset/412/z+alizadeh+sani) | CC BY 4.0 |
+
+`data/z_alizadeh_sani.csv` is made from `data/raw/` by `python convert_z_alizadeh_sani.py`,
+which documents every field mapping. These patients had no exercise test, so maximum heart
+rate, exercise angina, ST depression and ST slope are missing for them.
+
+Checked and **not** used: the Kaggle 918/1,190-row "heart" files and the 2026 Mendeley
+918-row file (copies of the UCI patients), the Mendeley "Cardiovascular Disease Dataset"
+from India (patterns inconsistent with real patients, e.g. exercise angina unrelated to
+disease and a within-dataset AUC of 0.997), the Kaggle Framingham file (a statistically
+altered teaching dataset) and the Kaggle "Cardio 70k" file (no documented origin).
+
 ## Setup
-1. Put your datasets in `data/` (any number of CSV files), or a single
-   `heart.csv` in this folder. Supported formats: UCI Cleveland (numeric or
-   text), the UCI multi-hospital file, Kaggle "Heart Failure Prediction"
-   (fedesoriano), and the Kaggle statlog/Cleveland/Hungary combined file.
-   Files are combined, duplicate patients removed, and features missing in
-   more than half the rows are dropped (see `data_prep.py`).
+1. Datasets go in `data/` (every CSV directly in that folder is combined). Supported
+   formats: CardiaQ's own columns, UCI Cleveland (numeric or text), the UCI multi-hospital
+   file, Kaggle "Heart Failure Prediction" (fedesoriano), and the Kaggle
+   statlog/Cleveland/Hungary combined file. Duplicate patients are removed, and features
+   missing in more than 60% of rows are dropped (see `data_prep.py`).
 2. `pip install -r requirements.txt`
 3. `python train.py`   (trains both models, saves them, writes metrics.json)
 4. `streamlit run app.py`
 
 ## Method
-- Classical: Random Forest, class-balanced.
-- Quantum: standardise, PCA to 4 components, scale to [0, pi], ZZFeatureMap
-  (4 qubits, 2 reps), fidelity quantum kernel, SVM on the precomputed kernel.
-- Quantum training is capped at 200 rows because kernel cost grows with n^2.
-- Metrics reported: accuracy, recall, precision, F1, training time.
+- Classical: Random Forest, class-balanced; handles missing values itself.
+- Quantum: fill gaps with the median, standardise, PCA to 4 components, scale to
+  [0, pi], ZZFeatureMap (4 qubits, 2 reps), fidelity quantum kernel, SVM on the
+  precomputed kernel.
+- Quantum training is capped at 240 rows because kernel cost grows with n^2.
+- The test split is stratified by data source; test ROC AUC is also reported per source.
+- Metrics reported: accuracy, recall, precision, F1, ROC AUC, training time.
 
 ## Limitations
-- Small, old dataset from specific hospitals; will not generalise.
+- Small, old datasets from specific hospitals; will not generalise.
 - No proven quantum advantage on small tabular data; runs on a simulator.
 - Not a medical device (UK: MHRA regulated).
 

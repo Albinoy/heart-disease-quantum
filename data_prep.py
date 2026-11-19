@@ -1,11 +1,14 @@
 """Load one or more heart disease CSV files into one clean numeric table.
 
 Where the data comes from
-- If a folder called data/ exists and contains .csv files, every file in it
-  is loaded and combined. Put each dataset you download in there.
-- Otherwise heart.csv in this folder is used.
+- Every .csv directly inside data/ is loaded and combined. Currently:
+    data/uci_heart_disease.csv  UCI Heart Disease, 4 hospitals (920 patients)
+    data/z_alizadeh_sani.csv    Z-Alizadeh Sani, Tehran (303 patients), made by
+                                convert_z_alizadeh_sani.py from data/raw/
+- If data/ has no .csv files, heart.csv in this folder is used.
 
 Supported formats (column names are matched case-insensitively)
+- CardiaQ's own columns (age, sex, cp, ... target), e.g. converted files
 - UCI Cleveland numeric (Kaggle "heart.csv": age, sex, cp, ... target)
 - UCI full multi-hospital (text values, 'thalch', 'num', 'dataset' columns)
 - Kaggle "Heart Failure Prediction" by fedesoriano (Age, ChestPainType,
@@ -27,7 +30,7 @@ Combining datasets
   training and test sets).
 - A feature is dropped if more than MAX_MISSING of rows are missing it after
   combining (e.g. ca and thal, which most datasets do not record). The
-  remaining gaps are filled with the median.
+  remaining gaps are filled with the median, unless fill_missing=False.
 """
 import glob
 import os
@@ -37,7 +40,9 @@ import pandas as pd
 
 FEATURES = ["age", "sex", "cp", "trestbps", "chol", "fbs", "restecg",
             "thalach", "exang", "oldpeak", "slope", "ca", "thal"]
-MAX_MISSING = 0.5
+# 0.6 keeps ST slope (missing for ~50% of patients: three of the four UCI
+# hospitals and the Iranian dataset rarely recorded it); ca and thal are dropped.
+MAX_MISSING = 0.6
 
 ALIASES = {
     "chestpaintype": "cp", "chest pain type": "cp",
@@ -106,8 +111,12 @@ def find_sources(path=None):
     return files or ["heart.csv"]
 
 
-def load_data(path=None, with_source=False, verbose=False):
-    """Return one numeric table: the usable features plus 'target'."""
+def load_data(path=None, with_source=False, verbose=False, fill_missing=True):
+    """Return one numeric table: the usable features plus 'target'.
+
+    fill_missing=False leaves gaps as NaN (for models that handle missing
+    values themselves, such as scikit-learn's RandomForestClassifier).
+    """
     files = find_sources(path)
     parts = [_normalise(pd.read_csv(f), os.path.basename(f)) for f in files]
     df = pd.concat(parts, ignore_index=True, sort=False)
@@ -118,9 +127,12 @@ def load_data(path=None, with_source=False, verbose=False):
 
     n_before = len(df)
     df = df.drop_duplicates(subset=features + ["target"]).reset_index(drop=True)
-    df[features] = df[features].fillna(df[features].median())
+    still_missing = df[features].isna().mean()
+    if fill_missing:
+        df[features] = df[features].fillna(df[features].median())
 
     info = {
+        "missing_share": {c: round(float(v), 3) for c, v in still_missing.items() if v > 0},
         "files": {p["source"].iloc[0]: int(len(p)) for p in parts},
         "rows_before_dedup": int(n_before),
         "rows": int(len(df)),
