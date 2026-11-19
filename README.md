@@ -56,7 +56,7 @@ altered teaching dataset) and the Kaggle "Cardio 70k" file (no documented origin
 `python benchmark.py --quick` (check it works) or `python benchmark.py` (full run).
 Results are written to `results/`.
 
-- Six models in repeated cross-validation: RF on 13 features, RF on 4 PCA
+- Six models in repeated cross-validation: RF on all 11 features, RF on 4 PCA
   features, RBF-SVM (default and tuned), quantum kernel SVM (default and tuned).
 - Tuned models choose their settings (quantum: angle scale and C; RBF-SVM:
   C and gamma) by inner CV on training rows only, never on the test fold.
@@ -95,3 +95,25 @@ The container listens on `$PORT` (default 8501), which most hosts set for you.
 - Render / Railway: create a web service from the GitHub repo; they detect the Dockerfile.
 
 The quantum model is simulated on the CPU, so the free tiers of these hosts are enough.
+
+## Agents and checks
+Five Claude Code subagents live in `.claude/agents/`. Ask Claude Code to use one by name
+(for example "use the data-discovery-agent to look for datasets from Japan").
+
+| Agent | Job | Can change files? |
+|---|---|---|
+| `research-agent` | Cited answers to medical, statistical and quantum-ML questions | No |
+| `data-discovery-agent` | Finds datasets worldwide, judges real/duplicate/fake, updates `datasets_catalog.csv` | Catalog and `data/raw/` only |
+| `data-engineering-agent` | Writes `convert_<name>.py`, runs the realism checks, adds `data/<name>.csv` | Data and converters |
+| `ml-training-engine` | Backs up models, retrains, restores the backup if checks fail | Models, `train.py` settings |
+| `evaluation-agent` | Model checks, app stress test, benchmark, writes `reports/` | Reports only |
+
+None of them commits, pushes or touches the live site; that stays with you.
+
+The checks they run are plain scripts you can run yourself:
+- `python check_dataset.py <file.csv>`: does a dataset look like real patients? (flat
+  distributions, risk factors pointing the wrong way, implausibly high accuracy, duplicates)
+- `python check_model.py --baseline <old metrics.json>`: are new models sane and not worse?
+- `python stress_test_app.py`: submits a patient 15 times headless; catches the Qiskit crash.
+
+`datasets_catalog.csv` lists every dataset assessed so far (47), marked Right or Wrong with the reason.

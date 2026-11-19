@@ -146,6 +146,14 @@ def benchmark_summary(cv):
     else:
         text += ("The quantum model is ahead by more than the spread. Check this holds on new data "
                  "before calling it an advantage. ")
+    # Like-for-like: classical models that see the same 4 compressed features as the quantum model.
+    same = [m for m in cn if "PCA" in m or "SVM" in m]
+    if same and cb not in same:
+        sb = max(same, key=auc)
+        sdiff, snoise = auc(sb) - auc(qb), max(sd(qb), sd(sb))
+        text += (f"On the same 4 compressed features, the best classical model, {sb}, scored {auc(sb):.2f}, "
+                 + ("so there the two are effectively tied. " if abs(sdiff) <= snoise else
+                    "ahead by more than the spread. " if sdiff > 0 else "behind the quantum model. "))
     untuned = [m for m in qn if "default" in m]
     if untuned and auc(qb) - auc(untuned[0]) > noise:
         text += (f"Untuned, the quantum model reached only {auc(untuned[0]):.2f}, so tuning its angle "
@@ -317,10 +325,10 @@ if cv is not None or exp is not None:
                            "Repeated cross-validation: every model is trained and tested many times on "
                            "different splits, and tuned settings are chosen without looking at the test "
                            "patients. Whiskers show how much the score varied."), unsafe_allow_html=True)
-    if len(metrics.get("data", {}).get("files", {})) > 1:
-        st.markdown('<p class="cq-small">This benchmark was run on the UCI patients only, before the Iranian '
-                    "patients were added, so its numbers differ from the test scores above.</p>",
-                    unsafe_allow_html=True)
+    st.markdown('<p class="cq-small">Run on all patients from both datasets, 5 folds repeated twice. To keep '
+                "the comparison fair, every 4-feature model gets the same 120 training patients per fold, so "
+                "the quantum score here is lower than the app's quantum model, which trains on 240.</p>",
+                unsafe_allow_html=True)
 if cv is not None:
     models = list(cv.index)
     labels = [m.replace(" (", "<br>(") for m in models]

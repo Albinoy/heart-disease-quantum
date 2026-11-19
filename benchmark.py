@@ -8,7 +8,7 @@ Outputs go in the results/ folder (CSV tables and PNG charts).
 
 Part A: repeated cross-validation of six models. Everything except the first
         model gets the SAME 4 PCA features and the SAME training rows:
-          1. Random Forest, 13 features, all rows
+          1. Random Forest, all features (11), all rows
           2. Random Forest, 4 PCA features
           3. RBF-SVM, default settings
           4. RBF-SVM, tuned (C and gamma, chosen by inner CV on training rows)
@@ -62,7 +62,7 @@ QUBIT_COUNTS = [2, 4] if QUICK else [2, 4, 6, 8]
 SCALES = [0.1, 0.5] if QUICK else [0.05, 0.1, 0.25, 0.5, 1.0]   # multiples of pi
 C_GRID = [0.1, 1.0, 10.0]
 
-M_RF = "RF (13 feat, all rows)"
+M_RF = "RF (all features, all rows)"
 M_RF4 = "RF (4 PCA feat)"
 M_SVM = "RBF-SVM (default)"
 M_SVMT = "RBF-SVM (tuned)"
