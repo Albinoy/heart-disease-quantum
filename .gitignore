@@ -3,4 +3,5 @@ __pycache__/
 heart.csv
 venv314/
 backups/
-data/raw/soochow_ccssscc_fibrinogen/  # real but not used for training (see datasets_catalog.csv)
+# Real but not used for training (see datasets_catalog.csv)
+data/raw/soochow_ccssscc_fibrinogen/
