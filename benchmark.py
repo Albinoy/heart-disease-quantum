@@ -72,7 +72,7 @@ MODEL_ORDER = [M_RF, M_RF4, M_SVM, M_SVMT, M_Q, M_QT]
 
 os.makedirs("results", exist_ok=True)
 
-df = load_data("heart.csv")
+df = load_data(verbose=True)
 X = df.drop(columns="target").to_numpy(dtype=float)
 y = df["target"].to_numpy()
 print(f"Data: {len(df)} rows, {X.shape[1]} features, {y.mean():.0%} positive", flush=True)

@@ -1,24 +1,26 @@
-"""Train a classical Random Forest and a TUNED quantum-kernel SVM on the UCI
-heart disease dataset, then save everything the Streamlit app needs.
+"""Train CardiaQ's two models and save everything the app needs.
 
-The quantum model chooses its angle scale and SVM C by 3-fold cross-validation
-on the training rows only (the test set is never used for tuning), matching
-the method in benchmark.py.
+- Classical: Random Forest on all usable features.
+- Quantum: quantum kernel SVM (simulated with Qiskit) on 4 PCA components.
+  Its angle scale and C are chosen by 3-fold cross-validation on the
+  training rows only, and its scores are turned into probabilities with a
+  calibration step fitted on out-of-fold scores (no test data used).
 
-Usage:  python train.py          (expects heart.csv in the same folder)
+Data: every .csv in data/ (combined, duplicates removed), or heart.csv.
+Usage:  python train.py
 """
 import json
 import time
 
 import joblib
 import numpy as np
-import pandas as pd
 from qiskit.circuit.library import ZZFeatureMap
 from qiskit_machine_learning.kernels import FidelityQuantumKernel
 from sklearn.decomposition import PCA
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import (accuracy_score, f1_score, precision_score,
-                             recall_score, roc_auc_score)
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import (accuracy_score, confusion_matrix, f1_score,
+                             precision_score, recall_score, roc_auc_score)
 from sklearn.model_selection import StratifiedKFold, train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
@@ -27,41 +29,43 @@ from sklearn.svm import SVC
 from data_prep import load_data
 
 SEED = 42
-N_QUBITS = 4      # = number of PCA components fed into the circuit
-MAX_TRAIN = 120   # quantum kernel cost grows with n^2 (same as benchmark.py)
-SCALES = [0.05, 0.1, 0.25, 0.5, 1.0]   # angle scale, as multiples of pi
+N_QUBITS = 4
+MAX_TRAIN = 120     # quantum kernel cost grows with n^2 (same as benchmark.py)
+SCALES = [0.05, 0.1, 0.25, 0.5, 1.0]   # angle scale, multiples of pi
 C_GRID = [0.1, 1.0, 10.0]
+NUMERIC = ["age", "trestbps", "chol", "thalach", "oldpeak"]
 
-df = load_data("heart.csv")
-X = df.drop("target", axis=1)
-y = df["target"]
-feature_names = list(X.columns)
+df = load_data(verbose=True)
+info = df.attrs["info"]
+features = info["features"]
+X, y = df[features], df["target"]
 
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=SEED, stratify=y
 )
 
 
-def scores(y_true, y_pred, y_score, seconds):
+def report(y_true, prob):
+    pred = (prob >= 0.5).astype(int)
+    tn, fp, fn, tp = confusion_matrix(y_true, pred, labels=[0, 1]).ravel()
     return {
-        "accuracy": accuracy_score(y_true, y_pred),
-        "recall": recall_score(y_true, y_pred),
-        "precision": precision_score(y_true, y_pred),
-        "f1": f1_score(y_true, y_pred),
-        "roc_auc": roc_auc_score(y_true, y_score),
-        "train_seconds": seconds,
+        "accuracy": accuracy_score(y_true, pred),
+        "recall": recall_score(y_true, pred),
+        "precision": precision_score(y_true, pred, zero_division=0),
+        "f1": f1_score(y_true, pred),
+        "roc_auc": roc_auc_score(y_true, prob),
+        "confusion": {"tn": int(tn), "fp": int(fp), "fn": int(fn), "tp": int(tp)},
     }
 
 
 # ---------- Classical model ----------
 t0 = time.time()
-rf = RandomForestClassifier(n_estimators=200, class_weight="balanced", random_state=SEED)
+rf = RandomForestClassifier(n_estimators=300, class_weight="balanced", random_state=SEED)
 rf.fit(X_train, y_train)
-rf_time = time.time() - t0
-rf_metrics = scores(y_test, rf.predict(X_test), rf.predict_proba(X_test)[:, 1], rf_time)
-print("Random Forest:", rf_metrics)
+rf_metrics = {**report(y_test, rf.predict_proba(X_test)[:, 1]), "train_seconds": time.time() - t0}
+print("Classical (Random Forest):", {k: v for k, v in rf_metrics.items() if k != "confusion"})
 
-# ---------- Quantum kernel model (tuned) ----------
+# ---------- Quantum model (tuned + calibrated) ----------
 if len(X_train) > MAX_TRAIN:
     X_q, _, y_q, _ = train_test_split(
         X_train, y_train, train_size=MAX_TRAIN, random_state=SEED, stratify=y_train
@@ -70,52 +74,63 @@ else:
     X_q, y_q = X_train, y_train
 y_q = np.asarray(y_q)
 
-# Features scaled to [0, 1]; the angle scale then multiplies by scale * pi.
 prep = Pipeline([
     ("scale", StandardScaler()),
     ("pca", PCA(n_components=N_QUBITS, random_state=SEED)),
     ("unit", MinMaxScaler(feature_range=(0, 1))),
 ])
-A1 = prep.fit_transform(X_q)
-B1 = prep.transform(X_test)
+A1, B1 = prep.fit_transform(X_q), prep.transform(X_test)
 
 kernel = FidelityQuantumKernel(feature_map=ZZFeatureMap(feature_dimension=N_QUBITS, reps=2))
-inner = StratifiedKFold(n_splits=3, shuffle=True, random_state=SEED)
+splits = list(StratifiedKFold(n_splits=3, shuffle=True, random_state=SEED).split(A1, y_q))
 
 t0 = time.time()
 kernels, best = {}, None
 for scale in SCALES:
-    print(f"  tuning: angle scale {scale}*pi ...", flush=True)
+    print(f"  tuning quantum model: angle scale {scale}*pi", flush=True)
     K = kernel.evaluate(x_vec=A1 * scale * np.pi)
     kernels[scale] = K
     for C in C_GRID:
-        aucs = []
-        for tr, va in inner.split(A1, y_q):
+        oof = np.zeros(len(y_q))
+        for tr, va in splits:
             m = SVC(kernel="precomputed", C=C, class_weight="balanced")
             m.fit(K[np.ix_(tr, tr)], y_q[tr])
-            aucs.append(roc_auc_score(y_q[va], m.decision_function(K[np.ix_(va, tr)])))
-        auc = float(np.mean(aucs))
+            oof[va] = m.decision_function(K[np.ix_(va, tr)])
+        auc = roc_auc_score(y_q, oof)
         if best is None or auc > best[0]:
-            best = (auc, scale, C)
+            best = (auc, scale, C, oof)
 
-cv_auc, best_scale, best_C = best
+cv_auc, best_scale, best_C, oof_scores = best
 print(f"Chosen: angle scale {best_scale}*pi, C = {best_C} (inner CV AUC {cv_auc:.3f})")
 
-svc = SVC(kernel="precomputed", C=best_C, class_weight="balanced",
-          probability=True, random_state=SEED)
-svc.fit(kernels[best_scale], y_q)
+svc = SVC(kernel="precomputed", C=best_C, class_weight="balanced").fit(kernels[best_scale], y_q)
+calib = LogisticRegression().fit(oof_scores.reshape(-1, 1), y_q)   # scores -> probabilities
 Xq_train = A1 * best_scale * np.pi
 q_time = time.time() - t0
 
 K_test = kernel.evaluate(x_vec=B1 * best_scale * np.pi, y_vec=Xq_train)
-q_metrics = scores(y_test, svc.predict(K_test), svc.decision_function(K_test), q_time)
-print("Quantum kernel SVM (tuned):", q_metrics)
+q_prob = calib.predict_proba(svc.decision_function(K_test).reshape(-1, 1))[:, 1]
+q_metrics = {**report(y_test, q_prob), "train_seconds": q_time}
+print("Quantum kernel SVM:", {k: v for k, v in q_metrics.items() if k != "confusion"})
+
+# ---------- Reference values for explaining a single prediction ----------
+train_df = X_train.assign(target=y_train.values)
+reference = {}
+for f in features:
+    col = train_df[f]
+    typical = float(col.median()) if f in NUMERIC else float(col.mode().iloc[0])
+    entry = {"typical": typical}
+    if f in NUMERIC:
+        entry["quantiles"] = [float(v) for v in np.quantile(col, np.linspace(0, 1, 101))]
+        entry["median_healthy"] = float(train_df.loc[train_df.target == 0, f].median())
+        entry["median_disease"] = float(train_df.loc[train_df.target == 1, f].median())
+    reference[f] = entry
 
 # ---------- Save ----------
 joblib.dump(rf, "rf_model.joblib")
 joblib.dump(
-    {"prep": prep, "svc": svc, "Xq_train": Xq_train, "n_qubits": N_QUBITS,
-     "angle_scale": best_scale, "C": best_C},
+    {"prep": prep, "svc": svc, "calib": calib, "Xq_train": Xq_train,
+     "n_qubits": N_QUBITS, "angle_scale": best_scale, "C": best_C},
     "quantum_model.joblib",
 )
 with open("metrics.json", "w") as f:
@@ -123,7 +138,9 @@ with open("metrics.json", "w") as f:
         {
             "Random Forest": rf_metrics,
             "Quantum kernel SVM": q_metrics,
-            "features": feature_names,
+            "features": features,
+            "reference": reference,
+            "data": info,
             "angle_scale": best_scale,
             "svm_C": best_C,
             "n_train_classical": len(X_train),

@@ -1,0 +1,6 @@
+A,B,mean_diff,std_diff,A_better_in_folds,folds
+Quantum tuned (top-4),RBF-SVM tuned (top-4),-0.009460985553361645,0.008955287714252207,2,10
+Quantum tuned (PCA4),RBF-SVM tuned (PCA4),-0.01943809158534219,0.03616228250958814,3,10
+Quantum tuned (top-4),Quantum tuned (PCA4),-0.017509623989658663,0.05489571945648941,1,10
+Hybrid Q+RBF (top-4),RBF-SVM tuned (top-4),-0.01714893153590823,0.04719385246250801,3,10
+Hybrid Q+RBF (top-4),Quantum tuned (top-4),-0.007687945982546585,0.04347414657256652,6,10

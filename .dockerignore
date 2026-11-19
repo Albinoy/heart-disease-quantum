@@ -1,0 +1,11 @@
+venv/
+venv314/
+__pycache__/
+*.pyc
+.git/
+.claude/
+.agents/
+.DS_Store
+heart_preview.html
+README1.md
+.gittignore
