@@ -40,7 +40,7 @@ N_QUBITS = 4
 # Iranian patients were added: at 120 the test AUC fell to 0.73 (0.59 on Iran).
 MAX_TRAIN = 240
 SCALES = [0.05, 0.1, 0.25, 0.5, 1.0]   # angle scale, multiples of pi
-C_GRID = [0.1, 1.0, 10.0, 100.0]
+C_GRID = [0.1, 1.0, 10.0, 100.0, 1000.0]   # 1000 added to test the top of the range; 100 is still chosen
 NUMERIC = ["age", "trestbps", "chol", "thalach", "oldpeak"]
 
 df = load_data(verbose=True, with_source=True, fill_missing=False)

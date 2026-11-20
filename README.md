@@ -117,3 +117,32 @@ The checks they run are plain scripts you can run yourself:
 - `python stress_test_app.py`: submits a patient 15 times headless; catches the Qiskit crash.
 
 `datasets_catalog.csv` lists every dataset assessed so far (47), marked Right or Wrong with the reason.
+
+## Second model: routine checks only
+A separate Random Forest (`routine_model.joblib`) estimates risk from the five inputs most
+real datasets share: age, sex, resting blood pressure, cholesterol and fasting blood sugar.
+That lets it learn from all five real-patient datasets CardiaQ holds, **13,190 patients**:
+
+| Source | Patients | Disease rate | Inputs available | How disease was defined |
+|---|---|---|---|---|
+| UCI (4 hospitals) | 920 | 55% | all five | angiography |
+| Z-Alizadeh Sani (Tehran) | 303 | 71% | all five | angiography |
+| Duke Cardiovascular Disease Databank (USA) | 3,504 | 67% | age, sex, cholesterol | catheterisation (>=75% narrowing) |
+| Soochow University (China) | 7,647 | 20% | age, sex, BP, cholesterol, sugar | heart attack vs other cardiology inpatients |
+| Kantonsspital St. Gallen (Switzerland) | 816 | 72% | age, sex | angiography |
+
+Build and train: `python prepare_routine_data.py` (writes `data_routine/`, kept off GitHub),
+then `python train_routine.py`. Every source gets equal weight and outcomes are balanced
+within each source, so the model learns medicine rather than "which hospital is this"; the
+output is a balanced score (50% = average patient across the five groups), not a
+population probability.
+
+Results: test ROC AUC 0.68-0.75 per source (mean 0.73); trained without a source and
+tested on it, 0.59-0.75. Much weaker than the main model (0.91), because it has no chest
+pain or exercise-test results, but every risk factor points the right way. The app shows
+it as a "second opinion" under the main result.
+
+Tested and not added (2026-11-20): Zheen Hospital, Erbil (1,319 patients) fails
+`check_dataset.py` on the shared inputs; SAheart (South Africa, 422 adult men) passes but
+adds nothing for the existing groups (mean AUC 0.725 -> 0.723). Used instead as an
+**external test**: the model, never trained on it, scores ROC AUC 0.68 on SAheart.

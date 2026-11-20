@@ -36,12 +36,15 @@ import pandas as pd
 from qiskit.circuit.library import PauliFeatureMap, ZZFeatureMap
 from qiskit_machine_learning.kernels import FidelityQuantumKernel
 from sklearn.decomposition import PCA
+from sklearn.base import clone
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, recall_score, roc_auc_score, roc_curve
 from sklearn.model_selection import (
     GridSearchCV,
     RepeatedStratifiedKFold,
     StratifiedKFold,
+    cross_val_predict,
     train_test_split,
 )
 from sklearn.pipeline import Pipeline
@@ -60,7 +63,7 @@ N_REPEATS = 1 if QUICK else 2
 TRAIN_SIZES = [20, 40, 60] if QUICK else [40, 80, 120, 200]
 QUBIT_COUNTS = [2, 4] if QUICK else [2, 4, 6, 8]
 SCALES = [0.1, 0.5] if QUICK else [0.05, 0.1, 0.25, 0.5, 1.0]   # multiples of pi
-C_GRID = [0.1, 1.0, 10.0]
+C_GRID = [0.1, 1.0, 10.0, 100.0, 1000.0]   # same range as train.py
 
 M_RF = "RF (all features, all rows)"
 M_RF4 = "RF (4 PCA feat)"
@@ -110,14 +113,38 @@ def metrics(y_true, y_pred, score):
     }
 
 
-def fit_quantum(A, ya, B, feature_map, C=1.0):
+def calibrated_preds(oof_scores, y_train, test_scores):
+    """Yes/no predictions from a calibrated probability >= 0.5.
+
+    A raw SVM cut-off (decision value 0) can put every patient on one side when
+    training data is small, giving recall 0 even with a good AUC. Instead, fit a
+    logistic curve (Platt scaling) on out-of-fold scores from the TRAINING rows
+    only, as train.py does for the app's quantum model. AUC is unaffected.
+    """
+    lr = LogisticRegression().fit(np.asarray(oof_scores).reshape(-1, 1), y_train)
+    return (lr.predict_proba(np.asarray(test_scores).reshape(-1, 1))[:, 1] >= 0.5).astype(int)
+
+
+def oof_precomputed(K, y, C, inner):
+    """Out-of-fold decision scores for an SVM on a precomputed kernel matrix."""
+    oof = np.zeros(len(y))
+    for tr, va in inner.split(K, y):
+        svc = SVC(kernel="precomputed", C=C, class_weight="balanced").fit(K[np.ix_(tr, tr)], y[tr])
+        oof[va] = svc.decision_function(K[np.ix_(va, tr)])
+    return oof
+
+
+def fit_quantum(A, ya, B, feature_map, C=1.0, seed=SEED):
     """Quantum kernel SVM with fixed settings. Returns (scores, preds, seconds)."""
     t0 = time.time()
     kernel = FidelityQuantumKernel(feature_map=feature_map)
     K_train = kernel.evaluate(x_vec=A)
     svc = SVC(kernel="precomputed", C=C, class_weight="balanced").fit(K_train, ya)
     K_test = kernel.evaluate(x_vec=B, y_vec=A)
-    return svc.decision_function(K_test), svc.predict(K_test), time.time() - t0
+    s = svc.decision_function(K_test)
+    inner = StratifiedKFold(n_splits=3, shuffle=True, random_state=seed)
+    preds = calibrated_preds(oof_precomputed(K_train, ya, C, inner), ya, s)
+    return s, preds, time.time() - t0
 
 
 def fit_quantum_tuned(A1, ya, B1, seed, nq=N_QUBITS):
@@ -147,7 +174,9 @@ def fit_quantum_tuned(A1, ya, B1, seed, nq=N_QUBITS):
     _, scale, C = best
     svc = SVC(kernel="precomputed", C=C, class_weight="balanced").fit(kernels[scale], ya)
     K_test = kernel.evaluate(x_vec=B1 * scale * np.pi, y_vec=A1 * scale * np.pi)
-    return svc.decision_function(K_test), svc.predict(K_test), time.time() - t0, scale, C
+    s = svc.decision_function(K_test)
+    preds = calibrated_preds(oof_precomputed(kernels[scale], ya, C, inner), ya, s)
+    return s, preds, time.time() - t0, scale, C
 
 
 def run_models(Xtr, ytr, Xte, yte, seed):
@@ -175,9 +204,11 @@ def run_models(Xtr, ytr, Xte, yte, seed):
     scores[M_RF4] = s
 
     t0 = time.time()
+    inner = StratifiedKFold(n_splits=3, shuffle=True, random_state=seed)
     svm = SVC(kernel="rbf", class_weight="balanced", random_state=seed).fit(A, ys)
     s = svm.decision_function(B)
-    out[M_SVM] = {**metrics(yte, svm.predict(B), s), "seconds": time.time() - t0}
+    oof = cross_val_predict(clone(svm), A, ys, cv=inner, method="decision_function")
+    out[M_SVM] = {**metrics(yte, calibrated_preds(oof, ys, s), s), "seconds": time.time() - t0}
     scores[M_SVM] = s
 
     t0 = time.time()
@@ -187,10 +218,11 @@ def run_models(Xtr, ytr, Xte, yte, seed):
         cv=3, scoring="roc_auc",
     ).fit(A, ys)
     s = grid.decision_function(B)
-    out[M_SVMT] = {**metrics(yte, grid.predict(B), s), "seconds": time.time() - t0}
+    oof = cross_val_predict(clone(grid.best_estimator_), A, ys, cv=inner, method="decision_function")
+    out[M_SVMT] = {**metrics(yte, calibrated_preds(oof, ys, s), s), "seconds": time.time() - t0}
     scores[M_SVMT] = s
 
-    s, p, secs = fit_quantum(A, ys, B, make_fm(N_QUBITS))
+    s, p, secs = fit_quantum(A, ys, B, make_fm(N_QUBITS), seed=seed)
     out[M_Q] = {**metrics(yte, p, s), "seconds": secs}
     scores[M_Q] = s
 

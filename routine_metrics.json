@@ -1,0 +1,84 @@
+{
+  "features": [
+    "age",
+    "sex",
+    "trestbps",
+    "chol",
+    "fbs"
+  ],
+  "n_patients": 13190,
+  "n_train": 10552,
+  "n_test": 2638,
+  "sources": {
+    "duke": {
+      "patients": 3504,
+      "disease_rate": 0.666
+    },
+    "soochow": {
+      "patients": 7647,
+      "disease_rate": 0.199
+    },
+    "stgallen": {
+      "patients": 816,
+      "disease_rate": 0.716
+    },
+    "uci": {
+      "patients": 920,
+      "disease_rate": 0.553
+    },
+    "z_alizadeh": {
+      "patients": 303,
+      "disease_rate": 0.713
+    }
+  },
+  "test_roc_auc_pooled": 0.7187733639788343,
+  "test_roc_auc_mean_per_source": 0.7253157072261704,
+  "by_source": {
+    "duke": {
+      "n_test": 701,
+      "disease_rate": 0.666,
+      "roc_auc": 0.7448205494244038,
+      "recall": 0.6788008565310493
+    },
+    "soochow": {
+      "n_test": 1530,
+      "disease_rate": 0.199,
+      "roc_auc": 0.7343084643693543,
+      "recall": 0.7475409836065574
+    },
+    "stgallen": {
+      "n_test": 163,
+      "disease_rate": 0.718,
+      "roc_auc": 0.7292827945001858,
+      "recall": 0.8547008547008547
+    },
+    "uci": {
+      "n_test": 184,
+      "disease_rate": 0.554,
+      "roc_auc": 0.6780846484935437,
+      "recall": 0.7647058823529411
+    },
+    "z_alizadeh": {
+      "n_test": 60,
+      "disease_rate": 0.717,
+      "roc_auc": 0.7400820793433652,
+      "recall": 0.627906976744186
+    }
+  },
+  "leave_one_source_out_auc": {
+    "duke": 0.746650590673727,
+    "soochow": 0.590329051462898,
+    "stgallen": 0.7103618032593293,
+    "uci": 0.6559926194675882,
+    "z_alizadeh": 0.6386228182205194
+  },
+  "typical_patient_estimate": 0.5259618620560996,
+  "direction_changes": {
+    "age 70": 0.1927590753408419,
+    "female": -0.33336401651214287,
+    "BP 160": 0.08783631023125316,
+    "cholesterol 300": 0.11454843683735483,
+    "fasting sugar > 120": 0.1165437394714901
+  },
+  "train_seconds": 0.47334909439086914
+}

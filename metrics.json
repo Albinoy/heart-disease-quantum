@@ -11,7 +11,7 @@
       "fn": 22,
       "tp": 123
     },
-    "train_seconds": 0.20396685600280762,
+    "train_seconds": 0.19991135597229004,
     "by_source": {
       "uci_heart_disease.csv": {
         "n_test": 184,
@@ -35,7 +35,7 @@
       "fn": 31,
       "tp": 114
     },
-    "train_seconds": 196.27083706855774,
+    "train_seconds": 194.44581818580627,
     "by_source": {
       "uci_heart_disease.csv": {
         "n_test": 184,
