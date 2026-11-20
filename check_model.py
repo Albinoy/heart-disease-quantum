@@ -11,7 +11,14 @@ Checks
   3. Known risk factors move the classical estimate the medically expected way
      for a typical patient (exercise angina, ST depression, low peak heart rate,
      older age, male sex all raise it).
-  4. Optional: no data source got clearly worse than in --baseline.
+  4. The same across a GRID of 80 patients (ages 35-80, both sexes, all chest pain
+     types), because one typical patient can hide reversals: the removed
+     routine-checks model and the pre-fix main model both passed check 3 while
+     higher blood pressure lowered the estimate for many other patients.
+     FAIL if more than 5% of grid patients move the wrong way by over 5 points.
+     The quantum model is checked on a smaller grid for BP and cholesterol
+     (WARN only: an SVM on 4 PCA components cannot be constrained).
+  5. Optional: no data source got clearly worse than in --baseline.
 """
 import argparse
 import json
@@ -69,11 +76,49 @@ def main():
         record(level, f"direction: {desc}", f"{p0:.0%} -> {p0 + d:.0%} (expected {'higher' if up else 'lower'})")
 
     kernel = FidelityQuantumKernel(feature_map=ZZFeatureMap(feature_dimension=q["n_qubits"], reps=2))
-    x = q["prep"].transform(row()) * q["angle_scale"] * np.pi
-    score = q["svc"].decision_function(kernel.evaluate(x_vec=x, y_vec=q["Xq_train"]))
-    pq = float(q["calib"].predict_proba(np.asarray(score).reshape(-1, 1))[0][1])
+
+    def q_prob(df):
+        x = q["prep"].transform(df) * q["angle_scale"] * np.pi
+        score = q["svc"].decision_function(kernel.evaluate(x_vec=x, y_vec=q["Xq_train"]))
+        return q["calib"].predict_proba(np.asarray(score).reshape(-1, 1))[:, 1]
+
+    pq = float(q_prob(row())[0])
     record("PASS" if 0.02 < pq < 0.98 else "WARN", "quantum: typical patient",
            f"estimate {pq:.0%} (classical {p0:.0%})")
+
+    # Grid direction checks.
+    def grid(ages, cps):
+        return pd.DataFrame([{**BASE, "age": a, "sex": s, "cp": c, "chol": 230}
+                             for a in ages for s in (0, 1) for c in cps])[feats].astype(float)
+
+    def wrong_way(prob_fn, g, col, lo, hi):
+        lo_df, hi_df = g.copy(), g.copy()
+        lo_df[col], hi_df[col] = lo, hi
+        d = prob_fn(hi_df) - prob_fn(lo_df)        # all checks are "should go up"
+        return float(np.mean(d < -0.05)), float(np.mean(d < -0.02))
+
+    rf_prob = lambda df: rf.predict_proba(df)[:, 1]
+    g = grid(range(35, 81, 5), (0, 1, 2, 3))
+    for desc, col, lo, hi in [("blood pressure 110 -> 170", "trestbps", 110, 170),
+                              ("cholesterol 180 -> 300", "chol", 180, 300),
+                              ("age 45 -> 70", "age", 45, 70),
+                              ("male instead of female", "sex", 0, 1),
+                              ("exercise angina", "exang", 0, 1),
+                              ("ST depression 0 -> 3", "oldpeak", 0, 3),
+                              ("max heart rate 170 -> 110", "thalach", 170, 110),
+                              ("fasting sugar > 120", "fbs", 0, 1)]:
+        if col not in feats:
+            continue
+        big, small = wrong_way(rf_prob, g, col, lo, hi)
+        level = "FAIL" if big > 0.05 else ("WARN" if small > 0 else "PASS")
+        record(level, f"grid direction: {desc}",
+               f"wrong way for {big:.0%} of {len(g)} grid patients by >5 points ({small:.0%} by >2)")
+    gq = grid(range(35, 81, 15), (0, 3))
+    for desc, col, lo, hi in [("blood pressure 110 -> 170", "trestbps", 110, 170),
+                              ("cholesterol 180 -> 300", "chol", 180, 300)]:
+        big, _ = wrong_way(q_prob, gq, col, lo, hi)
+        record("WARN" if big > 0.05 else "PASS", f"quantum grid direction: {desc}",
+               f"wrong way for {big:.0%} of {len(gq)} grid patients by >5 points (cannot be constrained)")
 
     if a.baseline:
         b = json.load(open(a.baseline))

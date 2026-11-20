@@ -42,6 +42,11 @@ MAX_TRAIN = 240
 SCALES = [0.05, 0.1, 0.25, 0.5, 1.0]   # angle scale, multiples of pi
 C_GRID = [0.1, 1.0, 10.0, 100.0, 1000.0]   # 1000 added to test the top of the range; 100 is still chosen
 NUMERIC = ["age", "trestbps", "chol", "thalach", "oldpeak"]
+# Inputs the Random Forest may only use to RAISE risk as they increase. Without this, the UCI
+# data (where BP and cholesterol barely relate to disease) taught it that higher BP or
+# cholesterol can lower risk for 22% / 39% of patients on a test grid. Constraining them
+# removed that and did not cost accuracy (cross-validated AUC 0.876 -> 0.880).
+INCREASING = ["trestbps", "chol"]
 
 df = load_data(verbose=True, with_source=True, fill_missing=False)
 info = df.attrs["info"]
@@ -77,7 +82,8 @@ def report(y_true, prob):
 
 # ---------- Classical model ----------
 t0 = time.time()
-rf = RandomForestClassifier(n_estimators=300, class_weight="balanced", random_state=SEED)
+rf = RandomForestClassifier(n_estimators=300, class_weight="balanced", random_state=SEED,
+                            monotonic_cst=[1 if f in INCREASING else 0 for f in features])
 rf.fit(X_train, y_train)
 rf_prob = rf.predict_proba(X_test)[:, 1]
 rf_metrics = {**report(y_test, rf_prob), "train_seconds": time.time() - t0, "by_source": by_source(rf_prob)}

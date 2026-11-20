@@ -33,7 +33,7 @@ altered teaching dataset) and the Kaggle "Cardio 70k" file (no documented origin
 4. `streamlit run app.py`
 
 ## Method
-- Classical: Random Forest, class-balanced; handles missing values itself.
+- Classical: Random Forest, class-balanced; handles missing values itself; constrained so that higher blood pressure or cholesterol can never lower its estimate (unconstrained, the UCI data made them go the wrong way for 22% / 39% of patients on a test grid; the constraint also raised cross-validated AUC from 0.876 to 0.880).
 - Quantum: fill gaps with the median, standardise, PCA to 4 components, scale to
   [0, pi], ZZFeatureMap (4 qubits, 2 reps), fidelity quantum kernel, SVM on the
   precomputed kernel.
@@ -113,7 +113,7 @@ None of them commits, pushes or touches the live site; that stays with you.
 The checks they run are plain scripts you can run yourself:
 - `python check_dataset.py <file.csv>`: does a dataset look like real patients? (flat
   distributions, risk factors pointing the wrong way, implausibly high accuracy, duplicates)
-- `python check_model.py --baseline <old metrics.json>`: are new models sane and not worse?
+- `python check_model.py --baseline <old metrics.json>`: are new models sane and not worse? Includes risk-factor directions across a grid of 80 patients, not just one typical patient.
 - `python stress_test_app.py`: submits a patient 15 times headless; catches the Qiskit crash.
 
 `datasets_catalog.csv` lists every dataset assessed so far (47), marked Right or Wrong with the reason.
