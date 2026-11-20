@@ -59,6 +59,9 @@ footer{visibility:hidden}
 .cq-sub{font-family:'Barlow Semi Condensed',sans-serif;font-size:1.4rem;font-weight:600;margin:1.8rem 0 .4rem}
 .cq-read{font-size:1.12rem;line-height:1.55;max-width:46rem;margin:.6rem 0 1rem}
 .cq-small{color:var(--muted);font-size:.9rem;max-width:46rem}
+.cq-table{border-collapse:collapse;margin:.6rem 0 1rem;font-size:.95rem;max-width:100%;display:block;overflow-x:auto}
+.cq-table th,.cq-table td{text-align:left;padding:.35rem .9rem .35rem 0;border-bottom:1px solid var(--line);white-space:nowrap}
+.cq-table th{font-weight:600}
 .cq-def{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1rem 1.6rem;margin:.6rem 0 1.4rem}
 .cq-def b{font-family:'Barlow Semi Condensed',sans-serif;font-size:1.2rem;font-weight:600}
 .cq-def p{margin:.1rem 0 0;color:var(--muted);line-height:1.4}

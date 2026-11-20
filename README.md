@@ -70,6 +70,26 @@ Tests, with nested cross-validation: PCA vs the 4 most important original featur
 a finer angle-scale grid, and a hybrid kernel (quantum + RBF). Paired per-fold AUC
 differences are reported so small gaps are not over-claimed.
 
+## Validation at hospitals the models have never seen (validate_hospitals.py)
+`python validate_hospitals.py` (about 25 minutes) trains both models, with train.py's exact
+settings, on four hospitals and tests them on the fifth, for each hospital in turn. This
+measures how the models would do somewhere new; the headline test scores (random 20% split)
+only measure new patients from hospitals the models already learned from.
+
+| Held-out hospital | Patients | Had disease | Classical AUC (95% CI) | Quantum AUC (95% CI) |
+|---|---|---|---|---|
+| Cleveland (USA) | 303 | 46% | 0.85 (0.81-0.89) | 0.79 (0.73-0.84) |
+| Budapest (Hungary) | 293 | 36% | 0.84 (0.79-0.89) | 0.86 (0.81-0.90) |
+| Zurich/Basel (Switzerland) | 123 | 94% | 0.73 (0.47-0.95) | 0.65 (0.46-0.82) |
+| Long Beach VA (USA) | 199 | 74% | 0.68 (0.59-0.77) | 0.69 (0.60-0.78) |
+| Tehran (Iran) | 303 | 71% | 0.58 (0.51-0.66) | 0.60 (0.53-0.67) |
+| **Average** | | | **0.74** | **0.72** |
+
+Against 0.91 (classical) and 0.82 (quantum) on familiar hospitals. At Tehran, whose patients
+had no exercise test, the classical model's average estimate was 22% although 71% had heart
+disease, and it caught only 6% of them at the 50% cut-off. Switzerland's interval is very wide
+because only 8 of its patients had no disease. Results: `results/hospital_validation.csv` / `.json`.
+
 ## Deploying as a website
 The app needs these files in the repository: `app.py`, `ui.py`, `explain.py`,
 `explain_tab.py`, `heart3d.py`, `heart.glb`, `rf_model.joblib`,

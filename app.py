@@ -319,6 +319,40 @@ if len(rf_src) > 1:
                 "patients never had an exercise test, so both models see less about them.</p>",
                 unsafe_allow_html=True)
 
+# ------------------------------------------------------------------ new hospital (P1)
+if os.path.exists("results/hospital_validation.json"):
+    with open("results/hospital_validation.json") as f:
+        hv = json.load(f)
+    st.markdown(
+        '<div class="cq-sub">At a hospital the models have never seen</div>'
+        '<p class="cq-small">The scores above use patients from the same hospitals the models learned from. '
+        "Here each hospital is held out in turn: both models are trained on the other four and tested on it. "
+        "This is the better guide to how the models would do somewhere new. Ranges are 95% intervals.</p>",
+        unsafe_allow_html=True)
+    rows = {}
+    for r in hv["rows"]:
+        rows.setdefault(r["hospital_name"], {"n": r["n"], "rate": r["disease_rate"]})[r["model"]] = r
+    head = ("<tr><th>Held-out hospital</th><th>Patients</th><th>Had disease</th>"
+            "<th>Classical AUC</th><th>Quantum AUC</th><th>Classical avg. estimate</th></tr>")
+    body = ""
+    for name, r in rows.items():
+        cell = lambda m: (f"{r[m]['roc_auc']:.2f} ({r[m]['auc_ci_low']:.2f}-{r[m]['auc_ci_high']:.2f})"
+                          if m in r else "-")
+        est = f"{r['Random Forest']['mean_estimate']:.0%}" if "Random Forest" in r else "-"
+        body += (f"<tr><td>{name}</td><td>{r['n']}</td><td>{r['rate']:.0%}</td><td>{cell('Random Forest')}</td>"
+                 f"<td>{cell('Quantum kernel SVM')}</td><td>{est}</td></tr>")
+    st.markdown(f'<table class="cq-table">{head}{body}</table>', unsafe_allow_html=True)
+    m_rf, m_q = hv["mean_auc"].get("Random Forest"), hv["mean_auc"].get("Quantum kernel SVM")
+    worst = min((r for r in hv["rows"] if r["model"] == "Random Forest"), key=lambda r: r["roc_auc"])
+    st.markdown(
+        f'<p class="cq-read">Averaged over the five held-out hospitals, the classical model scores an ROC AUC '
+        f"of {m_rf:.2f}" + (f" and the quantum model {m_q:.2f}" if m_q is not None else "")
+        + f", against {M_RF.get('roc_auc', 0):.2f} on familiar hospitals. It does worst on "
+        f"{worst['hospital_name']} ({worst['roc_auc']:.2f}), where its average estimate was "
+        f"{worst['mean_estimate']:.0%} although {worst['disease_rate']:.0%} had heart disease. "
+        "A model like this would need checking, and probably recalibrating, before use at any new hospital.</p>",
+        unsafe_allow_html=True)
+
 # ------------------------------------------------------------------ benchmark
 cv = load_csv("results/cv_summary.csv")
 exp = load_csv("results/quantum_experiments.csv")
