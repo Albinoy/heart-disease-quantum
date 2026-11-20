@@ -118,31 +118,23 @@ The checks they run are plain scripts you can run yourself:
 
 `datasets_catalog.csv` lists every dataset assessed so far (47), marked Right or Wrong with the reason.
 
-## Second model: routine checks only
-A separate Random Forest (`routine_model.joblib`) estimates risk from the five inputs most
-real datasets share: age, sex, resting blood pressure, cholesterol and fasting blood sugar.
-That lets it learn from all five real-patient datasets CardiaQ holds, **13,190 patients**:
+## Tried and removed: a "routine checks" model on 13,190 patients
+To use more of the real data collected, a second Random Forest was trained on the five inputs
+most datasets share (age, sex, blood pressure, cholesterol, fasting sugar) using five real
+datasets: UCI, Tehran, Duke (USA, 3,504), Soochow (China, 7,647) and St. Gallen
+(Switzerland, 816). It was shown briefly in the app as a "second opinion" and then removed
+after `evaluation-agent` failed it (full report: `reports/evaluation-routine-2026-11-20.md`):
 
-| Source | Patients | Disease rate | Inputs available | How disease was defined |
-|---|---|---|---|---|
-| UCI (4 hospitals) | 920 | 55% | all five | angiography |
-| Z-Alizadeh Sani (Tehran) | 303 | 71% | all five | angiography |
-| Duke Cardiovascular Disease Databank (USA) | 3,504 | 67% | age, sex, cholesterol | catheterisation (>=75% narrowing) |
-| Soochow University (China) | 7,647 | 20% | age, sex, BP, cholesterol, sugar | heart attack vs other cardiology inpatients |
-| Kantonsspital St. Gallen (Switzerland) | 816 | 72% | age, sex | angiography |
+- **It learned a medically wrong pattern.** In the Soochow data, heart-attack patients had
+  lower blood pressure than the other cardiology inpatients they were compared with (41%
+  disease at BP <= 100 mmHg, 2% above 180). The model learned that, so raising blood pressure
+  lowered its score for 38% of patients on a test grid (e.g. a 75-year-old man: 82% at BP 90,
+  50% at BP 200).
+- **The extra inputs added almost nothing beyond age and sex** (no significant gain in 4 of 5
+  sources; on 422 South African men from SAheart, never trained on, age alone matched it).
+- **It disagreed with the main model for about 1 in 4 patients**, and the main model was right
+  in two-thirds of those cases.
 
-Build and train: `python prepare_routine_data.py` (writes `data_routine/`, kept off GitHub),
-then `python train_routine.py`. Every source gets equal weight and outcomes are balanced
-within each source, so the model learns medicine rather than "which hospital is this"; the
-output is a balanced score (50% = average patient across the five groups), not a
-population probability.
-
-Results: test ROC AUC 0.68-0.75 per source (mean 0.73); trained without a source and
-tested on it, 0.59-0.75. Much weaker than the main model (0.91), because it has no chest
-pain or exercise-test results, but every risk factor points the right way. The app shows
-it as a "second opinion" under the main result.
-
-Tested and not added (2026-11-20): Zheen Hospital, Erbil (1,319 patients) fails
-`check_dataset.py` on the shared inputs; SAheart (South Africa, 422 adult men) passes but
-adds nothing for the existing groups (mean AUC 0.725 -> 0.723). Used instead as an
-**external test**: the model, never trained on it, scores ROC AUC 0.68 on SAheart.
+Lessons: pooling datasets whose "disease" labels mean different things (angiography vs heart
+attack) can teach a model artefacts of how patients were selected; and direction checks must
+cover a grid of patients, not one typical patient. The code is in git history (commit 605495c).

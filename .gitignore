@@ -13,8 +13,6 @@ data/raw/cadence/
 data/fincavas.csv
 data/cadence.csv
 data/raw/duke_acath/
-# Combined routine-checks table (built from data/ and data/raw/ by prepare_routine_data.py)
-data_routine/
 data/raw/zheen_erbil/
 data/raw/saheart/
 communication_guide.md

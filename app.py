@@ -37,19 +37,6 @@ def load_models():
     return rf, q, kernel, metrics
 
 
-@st.cache_resource
-def load_routine_model():
-    """Second model (routine checks only), trained by train_routine.py. Optional."""
-    if not (os.path.exists("routine_model.joblib") and os.path.exists("routine_metrics.json")):
-        return None, None
-    with open("routine_metrics.json") as f:
-        return joblib.load("routine_model.joblib"), json.load(f)
-
-
-ROUTINE_NAMES = {"uci": "UCI hospitals", "z_alizadeh": "Tehran", "duke": "Duke (USA)",
-                 "soochow": "Soochow (China)", "stgallen": "St. Gallen (Switzerland)"}
-
-
 @st.cache_data
 def load_csv(path):
     if not os.path.exists(path):
@@ -242,26 +229,6 @@ if res:
            if agree else "<b>The two models disagree</b>, which is common for borderline cases.")
         + "</p>", unsafe_allow_html=True)
 
-    routine, rm = load_routine_model()
-    if routine is not None:
-        rrow = pd.DataFrame([{f: vals.get(f) for f in rm["features"]}]).astype(float)
-        p_routine = float(routine.predict_proba(rrow)[0][1])
-        srcs = rm["sources"]
-        st.markdown(
-            '<div class="cq-sub">Second opinion: routine checks only</div>'
-            f'<p class="cq-read">A separate model that sees only age, sex, blood pressure, cholesterol and '
-            f"fasting blood sugar, but was trained on <b>{rm['n_patients']:,} real patients</b> from five "
-            f"hospital groups ({', '.join(ROUTINE_NAMES.get(s, s) for s in srcs)}), gives this patient a score "
-            f"of <b>{p_routine:.0%}</b>.</p>"
-            '<p class="cq-small">How to read it: the score is balanced so that 50% is the average patient '
-            "across the five groups; it is not the chance of disease in any real population. It cannot use chest "
-            "pain or exercise-test results, so it is much less accurate than the models above (ROC AUC "
-            f"{min(v['roc_auc'] for v in rm['by_source'].values()):.2f}-"
-            f"{max(v['roc_auc'] for v in rm['by_source'].values()):.2f} per hospital group, against "
-            f"{M_RF.get('roc_auc', 0):.2f} for the classical model). It shows how much routine checks alone can "
-            "tell, and the five groups define disease differently (angiography in four, heart attack in "
-            "Soochow).</p>", unsafe_allow_html=True)
-
     eff = res["effects"]
     if eff:
         st.markdown('<div class="cq-sub">What moved the estimate</div>'
@@ -423,13 +390,6 @@ if info:
         f'{info.get("positive_rate", 0):.0%} of patients had heart disease.'
         + (f" Not used because most records lack them: {', '.join(SHORT.get(c, c) for c in dropped)}." if dropped else "")
         + "</p>", unsafe_allow_html=True)
-_, routine_info = load_routine_model()
-if routine_info:
-    parts = ", ".join(f"{ROUTINE_NAMES.get(s, s)} ({v['patients']:,})" for s, v in routine_info["sources"].items())
-    st.markdown(
-        f'<p class="cq-read"><b>Routine-checks model:</b> trained on {routine_info["n_patients"]:,} patients '
-        f"from five real datasets: {parts}. It uses only age, sex, blood pressure, cholesterol and fasting "
-        "blood sugar, because those are what all five recorded.</p>", unsafe_allow_html=True)
 st.markdown(
     '<ul class="cq-limits">'
     "<li>The public datasets are small: the UCI patients were seen at four hospitals in the 1980s and the "
