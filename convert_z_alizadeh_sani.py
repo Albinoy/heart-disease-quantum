@@ -12,7 +12,13 @@ Mapping (only fields that mean the same thing are used):
   cp        <- Typical Chest Pain -> 0, Atypical -> 1, Nonanginal -> 2, none -> 3
   trestbps  <- BP (mm Hg)
   chol      <- LDL + HDL + TG/5 (Friedewald equation rearranged); left missing when
-               TG >= 400 mg/dl, where the equation is not valid
+               TG >= 400 mg/dl, where the equation is not valid (5 patients), and
+               when the calculated total falls outside CHOL_RANGE = 80-700 mg/dl
+               (2 patients: LDL 18 / HDL 22 / TG 37 -> 47, and LDL 30 / HDL 27 /
+               TG 83 -> 74). A total cholesterol below 80 mg/dl is essentially
+               never seen outside rare genetic disorders, so these are most likely
+               lab or transcription errors in LDL; the same 80-700 limit is used
+               by check_dataset.py. The value is left blank, never replaced.
   fbs       <- FBS > 120 mg/dl
   restecg   <- LVH -> 2; ST elevation, ST depression or T inversion -> 1; else 0
   target    <- Cath (Cad = 1, Normal = 0)
@@ -27,6 +33,7 @@ import pandas as pd
 
 SRC = "data/raw/z_alizadeh_sani/Z-Alizadeh sani dataset.xlsx"
 OUT = "data/z_alizadeh_sani.csv"
+CHOL_RANGE = (80, 700)    # mg/dl; calculated totals outside this are left missing
 
 
 def yes(col):
@@ -44,6 +51,7 @@ def convert(z: pd.DataFrame) -> pd.DataFrame:
     restecg = np.select([yes(z["LVH"]), st_t], [2, 1], default=0)
 
     chol = (z["LDL"] + z["HDL"] + z["TG"] / 5).where(z["TG"] < 400)
+    chol = chol.where(chol.between(*CHOL_RANGE))          # implausible -> missing
 
     return pd.DataFrame({
         "age": z["Age"],

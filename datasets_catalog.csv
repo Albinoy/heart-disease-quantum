@@ -33,7 +33,7 @@ Chapman-Shaoxing 12-lead ECG,Figshare / PhysioNet Challenge,China,Right,Real - E
 Ningbo 12-lead ECG,PhysioNet Challenge,China,Right,Real - ECG waveforms,34905 open 12-lead ECGs
 CPSC 2018,China Physiological Signal Challenge,China,Right,Real - ECG waveforms,6877 open 12-lead ECGs
 Georgia 12-lead ECG Challenge Database,PhysioNet Challenge,USA,Right,Real - ECG waveforms,Open 12-lead ECGs from Emory University
-TET4CAD (treadmill exercise test),Authors on request (Sensors 2024),Not stated,Right,Real - on request,Treadmill ECG images for 416 patients with angiography labels; contact authors
+TET4CAD (treadmill exercise test),Authors on request (Sensors 2024; Beijing Hospital),China,Right,Real - on request,Treadmill ECG images for 416 patients with angiography labels; contact authors
 UK Biobank,UK Biobank,United Kingdom,Right,Real - access by application,About 500000 participants; approved research applications and fees
 Framingham Heart Study (full cohort),BioLINCC / dbGaP,USA,Right,Real - access by application,Real cohort; request through BioLINCC or dbGaP
 Multi-Ethnic Study of Atherosclerosis (MESA),BioLINCC,USA,Right,Real - access by application,Real cohort with CVD events; request through BioLINCC
@@ -114,3 +114,170 @@ Guangzhou Biobank Cohort Study,Guangzhou No.12 Hospital / HKU / Birmingham,China
 CDARS / HA Data Collaboration Lab,Hong Kong Hospital Authority,Hong Kong,Right,Real - access by application,Territory-wide hospital records; only Hong Kong UGC-funded university researchers or HKSTP R&D; on-site/remote lab
 Taiwan NHIRD,Health and Welfare Data Science Center (MOHW),Taiwan,Right,Real - access by application,Claims database; applicant must be Taiwanese or Taiwan-affiliated; on-site analysis; fees; no lab results
 Taiwan Biobank,Taiwan Biobank (Academia Sinica),Taiwan,Right,Real - access by application,About 200000 adults with exams and biochemistry; proposal plus IRB review; international access restricted
+St. Gallen elective ICA cohort 2015 (Schiefer et al. PLoS One 2019; S1 minimal data set),PLOS ONE supplementary file,Switzerland,Right,Real - different features,816 elective ICA patients at Kantonsspital St. Gallen; only age/sex/angina type map to CardiaQ; CC BY 4.0; check_dataset WARN
+Patras CAD dataset (Samaras / Apostolopoulos; 571 patients),Authors on request (Sci Rep 2023),Greece,Right,Real - on request,University Hospital of Patras nuclear medicine 2018-2022; ICA-confirmed CAD; 21 clinical features; data from corresponding author
+Chest shape and exercise stress echocardiography dataset (IRCCS MultiMedica),Zenodo (restricted),Italy,Right,Real - on request,160 patients with positive exercise stress echo and angiography 2014-2020; files restricted
+MultiD4CAD (CT and clinical features for CAD),Zenodo (restricted),Italy,Right,Real - imaging,118 patients (78 CAD) from Palermo institutions; CT plus risk factors; Data Use Agreement; 5.8 TB
+Centro Cardiologico Monzino article datasets (CCTA / CT perfusion),Zenodo community monzino (restricted),Italy,Right,Real - on request,Raw data behind Milan CCTA/CTP vs ICA papers; restricted access on request
+CADICA (invasive coronary angiography images),Mendeley Data,Spain,Right,Real - imaging,42 patients from Hospital Universitario Virgen de la Victoria Malaga; ICA frames with lesion boxes; CC BY 4.0
+CARDIIGAN cohort (Innsbruck),Investigators (BMJ Open cohort profile 2018),Austria,Right,Real - on request,8296 elective ICA patients 2004-2008; no non-invasive test results; data sharing negotiable
+ProCor I/II stable CAD (PLoS One 2017),PLOS ONE supplementary file,Austria,Right,Real - different task,2300 physician-documented stable CAD patients; all have CAD; no exercise test or angiography variables
+LURIC (Ludwigshafen Risk and Cardiovascular Health Study),LURIC Study gGmbH,Germany,Right,Real - on request,About 3800 patients referred for coronary angiography 1997-2002; no published data access procedure found
+DISCHARGE trial (CT vs invasive coronary angiography),Charite Berlin / DISCHARGE consortium,Multiple (Europe),Right,Real - access by application,3561 stable chest pain patients at 26 European centres; IPD by proposal with data sharing agreement
+COME-CCT individual patient data consortium,Charite Berlin (BMJ 2019; JACC Adv 2025),Multiple (Germany-led; 22 countries),Right,Real - on request,5332 patients from 65 CTA diagnostic accuracy studies with ICA reference; requests considered by consortium
+FINCAVAS (Finnish Cardiovascular Study),Tampere University Hospital,Finland,Right,Real - on request,Exercise test cohort 2001-2007 with digital ECG; about 20% had angiography; no published access procedure
+Tampere stress-test QT variability supplement (Phil Trans R Soc A 2021),Royal Society Figshare,Finland,Right,Real - different features,100 Tampere bicycle-test patients by angiography group; only QT/RR variability indices; CC BY 4.0
+CADENCE (NT-proBNP during exercise test; Oslo),Study investigators (NCT01495091),Norway,Right,Real - on request,297 suspected stable CAD patients with exercise test and angiography; no data sharing statement found
+Exercise ECG in low pre-test probability chest pain (2023),Authors with Socialstyrelsen permission,Sweden,Right,Real - access by application,505 low-PTP outpatients; outcome is 1-year ACS/death not angiography; Swedish legal restrictions
+Whitehall II,UCL / Dementias Platform UK,United Kingdom,Right,Real - access by application,Civil servant cohort; free gated access via DPUK remote environment after committee review
+English Longitudinal Study of Ageing (ELSA),UK Data Service (SN 5050),United Kingdom,Right,Real - different features,Ageing survey with nurse-visit BP and cholesterol; heart conditions interview-reported; UKDS registration
+CPRD (Clinical Practice Research Datalink),CPRD (MHRA),United Kingdom,Right,Real - access by application,Primary care EHR; protocol approval via RDG process plus licence fees
+SAIL Databank,Swansea University,United Kingdom,Right,Real - access by application,Welsh linked health records; scoping then IGRP approval; project costs; remote gateway
+Generation Scotland,University of Edinburgh,United Kingdom,Right,Real - access by application,Family cohort with clinical measures and NHS record linkage; Access Committee review
+MINAP (Myocardial Ischaemia National Audit Project),NICOR,United Kingdom,Right,Real - access by application,National ACS audit; all patients have ACS; data access applications to NICOR
+NAKO (German National Cohort),NAKO e.V. TransferHub,Germany,Right,Real - access by application,205000+ participants in 18 centres; Use and Access Committee approval; fees
+KORA (Cooperative Health Research in the Augsburg Region),Helmholtz Munich (KORA.PASST),Germany,Right,Real - access by application,17602 adults 1984-2001 surveys; KORA Board project agreement; no commercial use
+SHIP (Study of Health in Pomerania),University Medicine Greifswald Transferstelle,Germany,Right,Real - access by application,Population cohort; free; needs a Greifswald collaboration partner
+Gutenberg Health Study,University Medical Center Mainz,Germany,Right,Real - on request,15000 baseline participants aged 35-74 (2007-2012); proposals via study management office
+ESTHER study,DKFZ / Krebsregister Saarland,Germany,Right,Real - on request,About 9940 Saarland adults 50-75 recruited by GPs; CVD follow-up; contact investigators
+Lifelines,Lifelines (UMCG Groningen),Netherlands,Right,Real - access by application,167729 participants with resting ECG; reviewed application; workspace fees
+SWEDEHEART / SCAAR,Uppsala Clinical Research Center,Sweden,Right,Real - access by application,National registry of all coronary angiographies and MI; ethics approval plus steering committee
+Malmo Diet and Cancer Study,Lund University (Malmo cohorts),Sweden,Right,Real - access by application,Steering committee approval; Swedish ethics approval required; application fee
+Danish national health registries (incl. National Patient Register),Danish Health Data Authority / Statistics Denmark,Denmark,Right,Real - access by application,Registry data only via authorised Danish research institution on secure platform
+Danish Nationwide ECG Cohort,Statistics Denmark,Denmark,Right,Real - access by application,Prehospital and in-hospital ECGs 2000-2021; access only via Danish research institution
+Tromso Study,UiT The Arctic University of Norway,Norway,Right,Real - access by application,Population cohort; approved institutions only; data fee per project
+Estonian Biobank,University of Tartu Estonian Genome Centre,Estonia,Right,Real - access by application,200000+ participants; four-step scientific and ethics approval
+CONSTANCES,Inserm / CONSTANCES,France,Right,Real - access by application,About 200000 adults 18-69; international scientific committee review; SNDS data via CASD
+MORGAM / BiomarCaRE,MORGAM Data Centre (THL Helsinki),Multiple (Europe),Right,Real - on request,Harmonised MONICA-era cohorts with coronary event follow-up; proposals via a member study
+Moli-sani Study,IRCCS Neuromed,Italy,Right,Real - access by application,Molise population cohort; proposal to scientific committee plus research agreement
+REGICOR,IMIM / Girona investigators,Spain,Right,Real - on request,Girona population MI registry 1990-2008 and cohorts; no published data access procedure found
+HAPIEE,UCL Central and Eastern European Health Research Group,Multiple (Europe),Right,Real - on request,Cohorts in Russia/Poland/Czech Republic/Lithuania aged 45-69; contact PIs
+Kaunas MONICA / post-MONICA cohorts,Lithuanian University of Health Sciences,Lithuania,Right,Real - on request,Kaunas population surveys 1983-2008 with CHD mortality follow-up; no published access procedure
+EPIC / EPIC-CVD,IARC,Multiple (Europe),Right,Real - access by application,Case-cohort of CHD and stroke cases; approved projects analysed remotely on IARC platform
+ESC EORP registries,European Society of Cardiology,Multiple (Europe),Right,Real - on request,Programme concluded 2024 (now GRASP); no public researcher access procedure found
+European ST-T Database,PhysioNet,Multiple (Europe),Right,Real - ECG waveforms,90 ambulatory ECG excerpts from 79 subjects with ST/T annotations; ODC-By
+Long-Term ST Database,PhysioNet,Slovenia / Italy / USA,Right,Real - ECG waveforms,86 Holter recordings of 80 subjects with ischaemic ST episodes; University of Ljubljana; 9.5 GB
+Leipzig Heart Center ECG-Database,PhysioNet,Germany,Right,Real - ECG waveforms,ECGs and intracardiac EGMs of children and congenital heart disease patients; arrhythmia labels
+Brno University of Technology ECG Quality Database (BUT QDB),PhysioNet,Czech Republic,Right,Real - ECG waveforms,18 long-term single-lead ECGs of 15 subjects; signal quality labels only
+Norwegian Endurance Athlete ECG Database,PhysioNet,Norway,Right,Real - ECG waveforms,28 elite athletes resting 12-lead ECGs (University of Oslo 2020); no disease label
+Lobachevsky University Electrocardiography Database (LUDB),PhysioNet,Russia,Right,Real - ECG waveforms,200 10-second ECGs from Nizhny Novgorod City Hospital No 5; wave delineation labels
+PTB-XL+,PhysioNet,Germany,Right,Real - ECG waveforms,ECG feature tables derived from PTB-XL; same patients as PTB-XL
+EMIDEC (delayed-enhancement cardiac MRI),emidec.com (Data 2020),France,Right,Real - imaging,150 DE-MRI exams from Dijon with emergency clinical data; MI vs normal; CC BY-NC-SA
+ACDC (Automated Cardiac Diagnosis Challenge),CREATIS Lyon,France,Right,Real - imaging,150 cine MRI exams from University Hospital of Dijon; 5 groups incl. prior MI
+M&Ms cardiac MRI segmentation challenge,Universitat de Barcelona,Spain / Germany / Canada,Right,Real - imaging,375 cine MRI studies from six hospitals; segmentation masks; no CAD label
+Heart Attack in Youth Vs Adult in Germany (ankushpanday1),Kaggle,Germany,Wrong,Origin not documented,No source given; uploader says data unevenly distributed to make analysis more interesting; MIT licence
+Heart Attacks in Germany (gbeminiyionipede),Kaggle,Germany,Wrong,Duplicate,Same 34976634-byte size as the undocumented ankushpanday1 Germany file; no description or source
+Heart Attack Risk Factors in Russia (ak0212),Kaggle,Russia,Wrong,Synthetic,Uploader states it contains synthetic patient data; label is risk estimate
+Scottish Coronary Heart Disease 2012-2021 (patricklford),Kaggle,United Kingdom,Wrong,No patient-level data,Aggregate CHD deaths by NHS Scotland health board; OGL; no patient rows
+NIHR ARC Wessex synthetic CVD dataset (heart attack or stroke),NIHR Open Research / Zenodo,United Kingdom,Wrong,Synthetic,100000 simulated patients from a simplified QRISK3 model; CC0
+Duke Cardiac Catheterization Diagnostic Dataset (acath; 3504 patients),Vanderbilt Biostatistics data repository (hbiostat.org; Duke Cardiovascular Disease Databank),USA,Right,Real - different features,Real Duke chest-pain referrals with cath-confirmed CAD; only age/sex/cholesterol map; check_dataset WARN
+CASS exercise test vs angiography (testCompareR cass; 871 rows),CRAN package testCompareR (Weiner et al. NEJM 1979),Not stated (NHLBI CASS),Right,Real - different features,"Only 3 binary columns (exercise test result, chest pain, angiography)"
+Coronary Artery Surgery Study (CASS),NHLBI BioLINCC,Not stated (NHLBI-funded multicentre),Right,Real - access by application,Angiography registry/trial 1973-1996; exercise test and angiography forms; BioLINCC request
+Women's Ischemia Syndrome Evaluation (WISE),NHLBI BioLINCC,USA,Right,Real - access by application,936 women referred for clinical angiography; core-lab angiography; BioLINCC request
+PROMISE (CT angiography vs functional testing),NHLBI BioLINCC,USA,Right,Real - access by application,10003 symptomatic outpatients; CCTA or exercise ECG/stress imaging; outcome endpoints
+ISCHEMIA / ISCHEMIA-CKD trials,NHLBI BioLINCC,Multiple (incl. USA / Canada / Brazil / Mexico / Argentina / Peru),Right,Real - access by application,5179 + 777 randomized; all have moderate-severe ischemia (no negatives); BioLINCC request
+CARDIA (Coronary Artery Risk Development in Young Adults),NHLBI BioLINCC,USA,Right,Real - access by application,5115 young adults from 1985; treadmill test and lipids; commercial use restricted
+Strong Heart Study,Strong Heart Study Coordinating Center (OUHSC),USA,Right,Real - access by application,American Indian cohort; tribal review and fees for data requests
+REGARDS (Reasons for Geographic and Racial Differences in Stroke),UAB REGARDS coordinating center,USA,Right,Real - access by application,De-identified data after approved manuscript or ancillary proposal plus IRB
+Dallas Heart Study,UT Southwestern DHS Executive Committee,USA,Right,Real - access by application,Proposal with internal DHS partner; analyst releases data
+Bogalusa Heart Study,NHLBI BioLINCC,USA,Right,Real - different task,11796 children/young adults (birth to 38 y); risk factors not CAD diagnosis
+HCHS/SOL (Hispanic Community Health Study / Study of Latinos),NHLBI BioLINCC,USA,Right,Real - access by application,US Hispanic/Latino cohort; ECG and risk factors; commercial consent tiered
+InCor multivessel CAD SYNTAX cohort (Dryad 4f4qrfjfv; 1719 patients),Dryad,Brazil,Right,Real - different task,All patients have angiographic multivessel CAD; outcome is 5-year mortality/MACCE
+Fleury CPET reference database (Rossi Neto et al. PLoS One 2019; 18189 tests),Fleury laboratory Sao Paulo (on request),Brazil,Right,Real - access by application,"Treadmill CPET of people free of heart disease; data confidential, on request"
+ELSA-Brasil (Brazilian Longitudinal Study of Adult Health),ELSA-Brasil investigators (proposal),Brazil,Right,Real - access by application,Access via research proposals to study investigators
+SaMi-Trop 12-lead ECG subset (1631 patients),Zenodo (CC BY 4.0),Brazil,Right,Real - ECG waveforms,Chagas cardiomyopathy patients; age/sex/normal-ECG and mortality labels
+CODE-test (827 annotated ECGs),Zenodo (CC BY 4.0),Brazil,Right,Real - ECG waveforms,Telehealth Network of Minas Gerais ECGs; 6 rhythm/conduction labels
+CirCor DigiScope Phonocardiogram Dataset,PhysioNet (ODC-By),Brazil,Right,Real - different task,Heart sounds of 1568 children/young adults (0-21 y); murmur labels
+PERU MIGRANT Study (figshare),Figshare (CC BY 4.0),Peru,Right,Real - different task,976 adults; categorised risk factors and 10-year mortality; no CAD diagnosis
+CRONICAS Cohort Study baseline (figshare),Figshare (CC BY 4.0),Peru,Right,Real - different task,Multimorbidity cohort in 4 Peruvian settings; no stress test or CAD confirmation
+CESCAS I (Southern Cone cohort),IECS Argentina investigators,Argentina / Chile / Uruguay,Right,Real - access by application,Population cohort; no public data-request route found
+Mexico City Prospective Study (MCPS),Oxford CTSU / UNAM (application),Mexico,Right,Real - access by application,About 160000 adults; baseline and mortality data; Mexico-first then worldwide access
+Mexican Health and Aging Study (MHAS),MHASweb.org (free registration),Mexico,Right,Real - survey self-report,Ageing survey; self-reported conditions; no CAD confirmation
+CRELES (Costa Rican Longevity and Healthy Aging Study),ICPSR (public-use),Costa Rica,Right,Real - survey self-report,2827 older adults; survey plus blood biomarkers; no CAD confirmation
+APPROACH (Alberta cardiac catheterization registry),Libin Cardiovascular Institute / University of Calgary,Canada,Right,Real - access by application,Province-wide catheterization registry since 1995; no public request process found
+CANHEART (Ontario linked health databases),ICES Data & Analytic Services,Canada,Right,Real - access by application,9.8 million adults from linked administrative data; secure ICES environment
+CLSA (Canadian Longitudinal Study on Aging),CLSA Data and Sample Access Committee,Canada,Right,Real - access by application,Comprehensive cohort with ECG and blood pressure; approved researchers
+Harvard-Emory ECG Database (HEEDB),Brain Data Science Platform / AWS Open Data,USA,Right,Real - ECG waveforms,About 12 million ECGs (MGH and Emory); BDSP restricted health data licence
+MIT-BIH ST Change Database,PhysioNet (ODC-By),USA,Right,Real - ECG waveforms,28 ECG recordings mostly from exercise stress tests; beat labels only
+EchoNet-Dynamic,Stanford AIMI (research use agreement),USA,Right,Real - imaging,Over 10000 echocardiogram videos from Stanford; no CAD label
+Stanford AIMI COCA (coronary calcium CT),Stanford AIMI (login),USA,Right,Real - imaging,Gated and non-gated CT with calcium scores; no CAD diagnosis label
+Sunnybrook Cardiac Data (2009 LV segmentation challenge),Cardiac Atlas Project,Canada,Right,Real - imaging,45 cine MRI cases incl. heart failure with infarction; segmentation task
+Heart Attack Prediction in United States (ankushpanday2),Kaggle,USA,Wrong,Origin not documented,No source given; same uploader as other synthetic country files
+Heart Attack Risk Prediction Dataset (iamsouravbanerjee; 8763 rows),Kaggle,Multiple (incl. USA / Canada / Brazil / Argentina / Colombia),Wrong,Synthetic,Uploader describes it as a synthetic dataset
+Heart_Care_and_Hospital_Data (samwash94; 10000 rows),Kaggle,USA,Wrong,Synthetic,Uploader states 10000 simulated records with random US states
+CardioSage-56K Cardiovascular Clinical & Risk Dataset (gowtha69),Kaggle,Multiple (incl. USA / Canada / Brazil),Wrong,Origin not documented,Engineered benchmark with exact round class counts; no source
+Heart Disease Prediction Dataset (mfarhaannazirkhan; 1888 rows),Kaggle,USA / Hungary / Switzerland,Wrong,Duplicate,Merge of five Kaggle copies of Cleveland/UCI/Statlog data
+Common Heart Disease Data 4 Hospitals (denysskyrda),Kaggle,USA / Hungary / Switzerland,Wrong,Duplicate,Copy of the UCI four-hospital data
+Indicators of Heart Disease 2022 (kamilpytlak),Kaggle,USA,Wrong,Duplicate,Subset of CDC BRFSS 2022 already catalogued; self-reported
+Estimation of Obesity Levels (Mexico / Peru / Colombia),UCI Machine Learning Repository / Kaggle,Mexico / Peru / Colombia,Wrong,Synthetic,77% of 2111 records generated with SMOTE; obesity survey not CAD
+Erbil Cardiovascular Health Dataset (ECHD; 334 clinic visitors),Mendeley Data (10.17632/396fd9yp6m),Iraq,Right,Real - different task,Erbil private clinic 2018-19; label 'heart problem' near-identical to resting ECG pattern; no exercise test
+Heart Attack Dataset (Zheen Hospital Erbil; 1319 rows),Mendeley Data (10.17632/wmhctcrt5v),Iraq,Right,Real - different task,Acute heart attack by troponin/CK-MB; no CardiaQ exercise or ECG fields
+An Extensive Dataset for the Heart Disease Classification System (Maghdid & Rashid; 1319 rows),Mendeley Data (10.17632/65gxgy2nmg),Iraq,Wrong,Duplicate,Same 1319 rows as the Zheen Hospital Heart Attack Dataset; no origin stated
+Heart Disease (Sherko Murad; Cihan University),Mendeley Data (10.17632/jtwbww4z9k),Iraq (uploader),Wrong,Duplicate,Uploader states it combines the Cleveland and Hungary data
+cardiovascular disease Yemen (Akoosh; 74319 rows),Mendeley Data (10.17632/kwsxsr4vcm),Yemen,Wrong,Duplicate,Same impossible BP values (16020; 14020; 11500) as Kaggle sulianova 70000-row file
+Nasarian CAD Dataset (150 male employees),UCI Machine Learning Repository (id 557),Iran,Right,Real - data file unavailable,Abadan occupational clinic; UCI download is empty; CAD confirmation method not stated
+X-ray Coronary Angiogram images and SYNTAX score (Tabriz; 231 patients),Figshare (Scientific Data 2025),Iran,Right,Real - imaging,Shahid Madani Hospital Tabriz 2018-20 angiograms with SYNTAX reports
+Angioplasty and Angiography Coronary Artery Image (Erfan Niayesh Hospital),IEEE DataPort (subscription),Iran,Right,Real - imaging,400 angiography/angioplasty clips; subscription required
+GU-ECG Database (Gazi University; 74 PTCA patients),Mendeley Data (10.17632/zhr5zsngtg),Turkey,Right,Real - ECG waveforms,12-lead ECG during balloon occlusion in CAD patients
+Coronary Angiography and Angioplasty Registry (CAAR; Imam Hossein Hospital Tehran),Investigators (MJIRI 2024;38:80),Iran,Right,Real - access not documented,1265 angiography patients 2021-22; CAD = stenosis >=50%; no data statement
+Tehran Heart Center coronary angiography data bank,Tehran Heart Center (TUMS),Iran,Right,Real - access not documented,Angiography registry since 2005; no external access process published
+Tehran Lipid and Glucose Study (TLGS),Research Institute for Endocrine Sciences (SBMU),Iran,Right,Real - access not documented,Population cohort since 1999; no published data request route found
+Golestan Cohort Study,NCI DCEG GEMShare,Iran,Right,Real - access by application,50045 adults; proposals via GEMShare; cancer-focused cohort
+PERSIAN Cohort Study,PERSIAN Cohort central committee (persiancohort.com),Iran,Right,Real - access by application,Single- or multi-centre proposals to PERSIAN research committee; data transfer agreement
+Isfahan Cohort Study (ICS),Isfahan Cardiovascular Research Institute,Iran,Right,Real - access not documented,6504 adults 2001; CVD events follow-up to 2011; no public access policy found
+MASHAD Study (Mashhad stroke and heart atherosclerotic disorder),Mashhad University of Medical Sciences,Iran,Right,Real - access not documented,9704 adults 2010-2020 cohort; no data sharing policy found
+Qatar Biobank,Qatar Biobank Research Portal,Qatar,Right,Real - access by application,Online portal application; IRB review; fees
+UAE Healthy Future Study,NYU Abu Dhabi Public Health Research Center,United Arab Emirates,Right,Real - access not documented,Emirati cohort; risk factors and carotid IMT; access process not published
+Gulf RACE / Gulf COAST,Gulf Heart Association registries,Multiple (Middle East),Right,Real - access not documented,ACS registries in Gulf hospitals; no external access route found
+SPACE (Saudi Project for Assessment of Coronary Events),Saudi Heart Association registry,Saudi Arabia,Right,Real - access not documented,ACS registry 17 hospitals 2005-07; no data access route found
+STARS-1/STARS-2 (Saudi Acute Myocardial Infarction Registry Program),Saudi registry investigators (PLOS ONE),Saudi Arabia,Right,Real - access not documented,AMI snapshot registry in ~50 hospitals; different task
+Jordanian PCI Registry (JoPCR1),Jordan Collaborating Cardiology Group (NCT01841346),Jordan,Right,Real - access not documented,PCI patients 12 centres 2013-14; no data sharing statement found
+ACSIS (Acute Coronary Syndrome Israeli Survey),Israel Heart Society working group,Israel,Right,Real - on request,ACS survey since 2000; some papers say data available on reasonable request
+Turkish Adult Risk Factor Study (TEKHARF / TARF),Turkish Society of Cardiology investigators,Turkey,Right,Real - access not documented,Population CHD cohort since 1990; no access process found
+Egyptian ACS / Mid-Delta IHD registries,Egyptian Society of Cardiology investigators,Egypt,Right,Real - access not documented,ACS and IHD registries; no public data or access route found
+SAheart (South African Heart Disease; ESL),Elements of Statistical Learning website,South Africa,Right,Real - different features,462 Western Cape males (Rousseauw 1983); no ECG or exercise fields; some measures post-event
+INTERHEART Africa,Population Health Research Institute (Circulation 2005),Multiple (Africa),Right,Real - access not documented,578 first AMI cases vs 785 controls in 9 countries; case-control risk factors
+Heart of Soweto Study,Soweto Cardiovascular Research Unit (Baragwanath),South Africa,Right,Real - access not documented,Cardiology registry 2006-08; no data sharing route found
+AWI-Gen (H3Africa),EGA via H3Africa Data and Biospecimen Access Committee,Multiple (Africa),Right,Real - access by application,Cardiometabolic phenotypes EGAD00001006425; controlled access
+SIREN (Stroke Investigative Research and Educational Network),H3Africa / SIREN investigators,Nigeria / Ghana,Right,Real - different task,Stroke case-control study; not coronary disease
+WHO STEPS surveys (MEA countries),WHO NCD Microdata Repository,Multiple (Africa / Middle East),Right,Real - different features,Household risk-factor surveys; many country files are licensed
+Heart Failure Prediction Pakistan (asgharalikhan; 368 rows; mirrors on opendata.com.pk and Kaggle zainab252729),Kaggle / opendata.com.pk,Pakistan,Wrong,Duplicate,Faisalabad AMI records spliced with Cleveland rows: all 368 cp-to-num blocks match Cleveland patients; 214 duplicate rows
+Prediction of Heart Attack (Aftab; 303 + 1763 rows),Mendeley Data (yrwd336rkz),Not stated,Wrong,Duplicate,v1 is Cleveland; v2 is the 1190-row UCI+Statlog file plus Statlog again (1670 of 1763 rows match UCI)
+Heart diseases datasets bd (shahadathossen664; 1622 rows),Kaggle,Bangladesh (uploader),Wrong,Duplicate,All rows are UCI Cleveland/Hungary patients; 1027 duplicate rows
+Heart Disease Bangladesh Data (rafatashrafjoy; 29999 rows),Kaggle,Bangladesh,Wrong,Origin not documented,No description or source; community screening file with names and birthdays (privacy); CVD flag not a diagnosis test
+Heart Attack Prediction in Indonesia (ankushpanday2; 158355 rows),Kaggle,Indonesia,Wrong,Synthetic,"Generated: negative LDL values, waist 20 cm, round-number prevalences; same uploader as other synthetic country files"
+Heart Angina Dataset (Karachi calcium score; 107 rows),Kaggle (muhammadshahrukh786),Pakistan,Wrong,Origin not documented,Unnamed private hospital; text copied from Pima template; 30 duplicate rows; calcium scores only
+Cardiovascular Disease Dataset (Tashkent; 1294 rows; 12 classes),Mendeley Data (xjhrfdzymx),Uzbekistan,Wrong,Origin not documented,No hospital years or ethics stated; all signs pre-binned codes; no ECG or exercise values
+Patient Health Data 2 (IIMCT-Pakistan Railway Hospital Rawalpindi; 125 patients),Kaggle (wajahatbokhari) / Croatian Oper Res Rev 2026,Pakistan,Right,Real - different task,Published survival cohort; outcome is death not CAD; no ECG or exercise fields
+ECG Images dataset of Cardiac Patients (Ch. Pervaiz Elahi Institute of Cardiology Multan),Mendeley Data (gwbz3fsgp8) / Data in Brief 2021,Pakistan,Right,Real - different task,ECG images from Pakistani cardiac hospitals labelled MI/abnormal/normal; CC BY 4.0
+EchoCardio-FMC-718 (Diabetic Association Medical College Faridpur),Mendeley Data (nvx2kchfyh),Bangladesh,Right,Real - different task,718 echocardiogram reports with pathology labels; no exercise or ECG fields
+Heart Failure Medical Records (RSUP Prof Ngoerah Denpasar; 9694 rows),Mendeley Data (dhkd224jrp),Indonesia,Right,Real - different task,Heart failure notes in Bahasa Indonesia for NER; no CAD label
+Multidisciplinary heart failure program readmission (RSCM Jakarta),Mendeley Data (w3rvj276jf),Indonesia,Right,Real - not patient-level,Only summary tables and figures (PDF); heart failure readmission
+Heart Disease 2010-2020 Sri Lanka (kavishkadesilva),Kaggle,Sri Lanka,Wrong,Not patient-level,Monthly district case counts; source not stated
+KURIAS-ECG (Korea University Anam Hospital),PhysioNet (restricted),South Korea,Right,Real - different task,20000 ECGs from 13862 patients 2017-2020; downloads disabled since 2021 audit
+Synthetic 12-lead ECG dataset (Korea University; 6000 ECGs),Health Inf Sci Syst 2023 (PMC10468461),South Korea,Wrong,Synthetic,Generated ECGs trained on Anam Hospital data; not real patients
+VitalDB (Seoul National University Hospital),PhysioNet (open; CC BY 4.0),South Korea,Right,Real - different task,6388 surgical cases with intraoperative vitals; anaesthesia not CAD diagnosis
+KNHANES,KDCA (knhanes.kdca.go.kr),South Korea,Right,Real - different task,Free microdata after registration; measured BP lipids glucose; MI/angina by self-reported doctor diagnosis; no ECG or exercise test
+NHIS health checkup sample (1 million per year),data.go.kr (15007122),South Korea,Right,Real - different task,Open NHIS screening results (BP glucose cholesterol; age bands); no diagnosis label
+NHIS-HEALS (National Health Screening Cohort),NHIS Data Sharing Service (nhiss.nhis.or.kr),South Korea,Right,Real - different task,514866 screened adults with ICD-10 claims; Korean researchers only; fee
+KoGES (Korean Genome and Epidemiology Study),Korea NIH / KDCA application,South Korea,Right,Real - different task,Cohorts with BP lipids glucose and ECG subset; outcomes by self-report and linkage; committee approval
+KAMIR / KAMIR-NIH (Korea Acute MI Registry),Registry investigators (NCT07409441),South Korea,Right,Real - different task,AMI-only registry; data restricted to study investigators
+PRECISE-SG100K / Singapore Multi-Ethnic Cohort,NPM / TRUST Data Access Committee,Singapore,Right,Real - different task,Phenotype and genomic cohort; Singapore-led teams only
+Singapore Chinese Health Study,NUS Saw Swee Hock SPH (application),Singapore,Right,Real - different task,63257 adults 1993-1998; outcomes via registry linkage; proposal review
+NCVD-ACS Registry,National Cardiovascular Disease Database (acrm.org.my),Malaysia,Right,Real - different task,ACS-only registry; data release needs Advisory Board approval
+Thai ACS Registry (TACSR) / TRACS,Heart Association of Thailand investigators,Thailand,Right,Real - different task,ACS-only registries (9373 and 39-centre cohorts); no public data release found
+Riskesdas (Indonesia Basic Health Research),BKPK Ministry of Health (layanandata.kemkes.go.id),Indonesia,Right,Real - different task,National survey by formal request; heart disease by doctor diagnosis interview
+IFLS (Indonesian Family Life Survey),RAND (registration),Indonesia,Right,Real - different task,Household survey with BP and some lipids; no CAD diagnosis test
+WHO STEPS Bangladesh 2018,WHO NCD Microdata Repository (licensed),Bangladesh,Right,Real - different task,Risk-factor survey of adults 18-69; no CAD diagnosis
+PURE (Prospective Urban Rural Epidemiology),PHRI (NCT03225586),Multiple (26 countries incl. Bangladesh),Right,Real - different task,IPD only for participating investigators; outsiders 3 years after study end
+AusDiab,Baker Heart and Diabetes Institute (application),Australia,Right,Real - different task,Population cohort; scientific committee approval HREC and fees
+45 and Up Study,Sax Institute,Australia,Right,Real - different task,250000+ NSW adults linked to hospital data; application
+ASPREE,Monash University ASPREE Access Management Site,Australia,Right,Real - different task,Aspirin trial in older adults; safe-haven access by EOI
+Busselton Health Study,Busselton Population Medical Research Institute,Australia,Right,Real - different task,Community cohort; committee approval with affiliated collaborator and fees
+VISION-CAD (SAHMRI),Health Data Australia / SAHMRI (on request),Australia,Right,Real - different task,300 angiography patients with residual plaque; access by data owner review
+CADOSA Registry (South Australia),University of Adelaide (registry),Australia,Right,Real - different task,45000+ angiography and PCI records; registry access only
+ASOCA (Coronary Atlas CTCA),Scientific Data 2023 / UK Data Service,Australia / New Zealand,Right,Real - different task,40 coronary CT angiograms with segmentations; images not tabular
+PREDICT cohort (VIEW programme),University of Auckland VIEW,New Zealand,Right,Real - different task,Primary-care CVD risk assessments linked to hospital data; no public access route found
+ANZACS-QI,University of Auckland VIEW / Te Whatu Ora,New Zealand,Right,Real - different task,National ACS and angiography registry; research access via VIEW team
+ARCADE (X-ray coronary angiography; Almaty),Zenodo (10.5281/zenodo.10390295),Kazakhstan,Right,Real - different task,3000 angiography frames from 1500 patients; images only; CC0
+Kazakh PCI restenosis genotyping raw data,Zenodo (51651),Kazakhstan,Right,Real - different task,Genotyping array files; 771 MB; not clinical tabular

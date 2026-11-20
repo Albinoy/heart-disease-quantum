@@ -5,3 +5,11 @@ venv314/
 backups/
 # Real but not used for training (see datasets_catalog.csv)
 data/raw/soochow_ccssscc_fibrinogen/
+data/raw/stgallen_ica_2015/
+# Draft emails (personal) and data received under data-sharing agreements: never public
+data_request_emails.md
+data/raw/fincavas/
+data/raw/cadence/
+data/fincavas.csv
+data/cadence.csv
+data/raw/duke_acath/
