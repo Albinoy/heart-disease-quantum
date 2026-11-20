@@ -18,6 +18,7 @@ import streamlit as st
 from explain import (
     REGION_NAMES,
     build_explainer,
+    caveats,
     explain_in_words,
     explain_patient,
     global_importance,
@@ -52,6 +53,8 @@ def render_explanation(model, X_train, patient_df, model_key: str = "rf_v1"):
     st.markdown("**Main factors in plain English**")
     for line in explain_in_words(result):
         st.markdown(f"- {line}")
+    for note in caveats(result):
+        st.warning(note)
 
     # Preview of Phase 3: these are the regions the 3D heart will blink.
     regions = region_scores(result["contributions"], top_n=3)

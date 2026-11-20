@@ -138,7 +138,35 @@ def display_value(feature: str, value) -> str:
         return str(value)
 
 
-def value_why(feature: str, value) -> str:
+# When a value counts as abnormal, so the medical "why" sentence (which describes an
+# abnormal finding) applies. Standard clinical cut-offs; `p` is the whole patient row.
+ABNORMAL = {
+    "trestbps": lambda v, p: v >= 140,                      # hypertension threshold
+    "chol": lambda v, p: v >= 240,                          # high total cholesterol
+    "fbs": lambda v, p: v == 1,
+    "restecg": lambda v, p: v > 0,
+    "thalach": lambda v, p: v < 0.85 * (220 - p.get("age", 55)),   # below 85% of predicted max
+    "exang": lambda v, p: v == 1,
+    "oldpeak": lambda v, p: v >= 1.0,                       # >= 1 mm ST depression
+    "slope": lambda v, p: v >= 1,                           # flat or downsloping
+    "cp": lambda v, p: v != 2,                              # non-anginal pain is not a cardiac sign
+}
+
+NEUTRAL_WHY = ("This value is not abnormal on its own; the model links it to slightly higher risk "
+               "together with this patient's other answers, based on patterns in its training data.")
+
+
+def value_why(feature: str, value, patient: dict | None = None) -> str:
+    """Medical reason for a risk-raising answer. If the patient's value is normal
+    (e.g. blood pressure 130), the reason for an abnormal value would mislead, so a
+    neutral sentence is returned instead."""
+    rule = ABNORMAL.get(feature)
+    if rule is not None:
+        try:
+            if not rule(float(value), patient or {}):
+                return NEUTRAL_WHY
+        except (TypeError, ValueError):
+            pass
     whys, code = VALUE_WHY.get(feature), _code(value)
     if whys and code is not None and 0 <= code < len(whys):
         return whys[code]
@@ -273,7 +301,8 @@ def explain_patient(model, explainer, patient: pd.DataFrame, positive_label=1) -
     )
     grouped["label"] = grouped["feature"].map(lambda f: FEATURE_INFO.get(f, {}).get("label", f))
     grouped["region"] = grouped["feature"].map(lambda f: FEATURE_INFO.get(f, {}).get("region", "whole_heart"))
-    grouped["why"] = [value_why(f, v) for f, v in zip(grouped["feature"], grouped["value"])]
+    row = {k: float(v) for k, v in patient.iloc[0].items() if pd.notna(v)}
+    grouped["why"] = [value_why(f, v, row) for f, v in zip(grouped["feature"], grouped["value"])]
     grouped["value"] = [display_value(f, v) for f, v in zip(grouped["feature"], grouped["value"])]
     grouped["direction"] = np.where(grouped["shap"] > 0, "raises risk", "lowers risk")
     grouped = grouped.reindex(grouped["shap"].abs().sort_values(ascending=False).index).reset_index(drop=True)
@@ -323,6 +352,21 @@ def explain_in_words(result: dict, top_k: int = 3) -> list[str]:
     if not lines:
         lines.append("None of this patient's values pushed the risk above average.")
     return lines
+
+
+def caveats(result: dict) -> list[str]:
+    """Warnings for known quirks of the training data that affect this patient's estimate."""
+    c = result["contributions"]
+    out = []
+    cp = c[c["feature"] == "cp"]
+    if len(cp) and cp.iloc[0]["value"] in ("Typical angina", "Atypical angina") and cp.iloc[0]["shap"] < -0.01:
+        out.append(
+            f"{cp.iloc[0]['value']} lowered this estimate. That is a quirk of the UCI training data: most "
+            "patients there were sent for angiography, and those without chest pain usually had other strong "
+            "signs of disease, so 'no chest pain' carries more risk in the model than angina does. Clinically, "
+            "angina is a warning sign, and anyone with chest pain should see a doctor."
+        )
+    return out
 
 
 # ---------------------------------------------------------------------------

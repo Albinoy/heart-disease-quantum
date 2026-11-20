@@ -210,8 +210,10 @@ if res:
     p_rf, p_q, vals = res["p_rf"], res["p_q"], res["values"]
     avg = (p_rf + p_q) / 2
     level, color = level_of(avg)
-    st.markdown(ui.section("Result", "Estimates are the share of similar patients in the training data "
-                                     "who had heart disease."), unsafe_allow_html=True)
+    st.markdown(ui.section("Result", "The classical estimate closely matches the share of similar patients "
+                                     "in the training data who had heart disease. The quantum estimate is "
+                                     "rougher, and tends to be too low for patients like the Iranian group, "
+                                     "who had no exercise test."), unsafe_allow_html=True)
     chart(ui.ruler_html(p_rf, p_q, level, color))
 
     agree = (p_rf >= 0.5) == (p_q >= 0.5)
@@ -394,6 +396,14 @@ st.markdown(
     "<li>The Iranian patients had no exercise test, and many UCI patients lack some results. The classical "
     "model handles these gaps itself; the quantum model fills them with typical values, which hides real "
     "uncertainty.</li>"
+    "<li>The quantum model is weaker for the Iranian patients: on its test patients its estimates averaged "
+    "58% when 70% had heart disease, and for Iranian men it ranked patients no better than chance (based "
+    "on only 33 test patients).</li>"
+    "<li>Chest pain works backwards in the UCI data: typical angina gives a lower estimate than no chest "
+    "pain, because UCI patients without chest pain were usually sent for angiography only when other tests "
+    "already pointed to disease. The Iranian data shows the expected pattern (94% of patients with typical "
+    "angina had disease), but the model cannot tell which group a new patient resembles. Clinically, angina "
+    "is a warning sign.</li>"
     "<li>The quantum model runs on a simulator on an ordinary computer, not on quantum hardware.</li>"
     "<li>Neither model has been clinically validated, and medical software in the UK must be approved "
     "by the MHRA before clinical use.</li></ul>", unsafe_allow_html=True)
