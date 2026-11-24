@@ -136,7 +136,7 @@ The checks they run are plain scripts you can run yourself:
 - `python check_model.py --baseline <old metrics.json>`: are new models sane and not worse? Includes risk-factor directions across a grid of 80 patients, not just one typical patient.
 - `python stress_test_app.py`: submits a patient 15 times headless; catches the Qiskit crash.
 
-`datasets_catalog.csv` lists every dataset assessed so far (47), marked Right or Wrong with the reason.
+`datasets_catalog.csv` lists every dataset assessed so far (282), marked Right or Wrong with the reason.
 
 ## Tried and removed: a "routine checks" model on 13,190 patients
 To use more of the real data collected, a second Random Forest was trained on the five inputs
